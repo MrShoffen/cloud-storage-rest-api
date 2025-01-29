@@ -1,3 +1,21 @@
 spring:
   application:
     name: cloud-storage
+  datasource:
+    url: jdbc:postgresql://192.168.0.125:3434/postgres?currentSchema=taskList
+    username: postgres
+    password: 1337
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    open-in-view: false
+    properties.hibernate:
+      show_sql: true
+      format_sql: true
+      hbm2ddl.auto: validate
+
+  profiles:
+    active: restControllerSecurity
+
+#security:
+#  type: restControllerSecurity
