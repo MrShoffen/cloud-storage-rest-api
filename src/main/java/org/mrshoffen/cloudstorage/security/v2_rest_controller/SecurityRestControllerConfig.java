@@ -1,7 +1,6 @@
 package org.mrshoffen.cloudstorage.security.v2_rest_controller;
 
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -14,9 +13,9 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import java.util.Collections;
 import java.util.List;
@@ -41,7 +40,16 @@ import java.util.List;
 @Configuration
 @Profile("restControllerSecurity")
 @ComponentScan(basePackages = "org.mrshoffen.cloudstorage.security.v2_rest_controller")
+//@EnableSpringHttpSession
 public class SecurityRestControllerConfig {
+
+
+//    @Bean
+//    public MapSessionRepository sessionRepository() {
+//        return new MapSessionRepository(new ConcurrentHashMap<>()); // Передаем Map для хранения сессий
+//    }
+
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -51,6 +59,10 @@ public class SecurityRestControllerConfig {
                         .requestMatchers("/auth/login").permitAll()
                         .anyRequest().authenticated()
                 )
+
+                .sessionManagement(session -> session
+                        .maximumSessions(1)
+                )
                 .logout(AbstractHttpConfigurer::disable);
 
         return http.build();
@@ -58,8 +70,9 @@ public class SecurityRestControllerConfig {
 
     @Bean
     UserDetailsService userDetailsService() {
-        User user = new User("alina", "{noop}12345", Collections.emptyList());
-        return new InMemoryUserDetailsManager(user);
+        User user = new User("alina", "{noop}alina", Collections.emptyList());
+        User user2 = new User("anton", "{noop}anton", Collections.emptyList());
+        return new InMemoryUserDetailsManager(user, user2);
     }
 
     @Bean
@@ -71,7 +84,7 @@ public class SecurityRestControllerConfig {
     @Bean
     public List<LogoutHandler> logoutHandlers() {
         return List.of(
-                new CookieClearingLogoutHandler("JSESSIONID"),
+//                new CookieClearingLogoutHandler("JSESSIONID"),
                 new SecurityContextLogoutHandler()
         );
     }

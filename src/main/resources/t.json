@@ -1,0 +1,26 @@
+{
+  "@class": "org.springframework.security.core.context.SecurityContextImpl",
+  "authentication": {
+    "@class": "org.springframework.security.authentication.UsernamePasswordAuthenticationToken",
+    "authorities": [
+      "java.util.Collections$UnmodifiableRandomAccessList",
+      []
+    ],
+    "details": null,
+    "authenticated": true,
+    "principal": {
+      "@class": "org.springframework.security.core.userdetails.User",
+      "password": null,
+      "username": "alina",
+      "authorities": [
+        "java.util.Collections$UnmodifiableSet",
+        []
+      ],
+      "accountNonExpired": true,
+      "accountNonLocked": true,
+      "credentialsNonExpired": true,
+      "enabled": true
+    },
+    "credentials": null
+  }
+}

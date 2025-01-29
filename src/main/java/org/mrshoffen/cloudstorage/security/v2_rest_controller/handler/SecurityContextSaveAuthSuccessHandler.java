@@ -3,6 +3,7 @@ package org.mrshoffen.cloudstorage.security.v2_rest_controller.handler;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.v2_rest_controller.SecurityRestControllerConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -23,7 +24,6 @@ import java.io.IOException;
 public class SecurityContextSaveAuthSuccessHandler implements AuthenticationSuccessHandler {
 
     private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
-    private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -31,7 +31,10 @@ public class SecurityContextSaveAuthSuccessHandler implements AuthenticationSucc
         context.setAuthentication(authentication);
         securityContextHolderStrategy.setContext(context);
 
-        securityContextRepository.saveContext(context, request, response);
+        HttpSession session = request.getSession();
+        if (session != null) {
+            session.setAttribute("SPRING_SECURITY_CONTEXT", context);
+        }
     }
 }
 

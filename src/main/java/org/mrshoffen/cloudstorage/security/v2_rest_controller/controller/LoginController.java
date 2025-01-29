@@ -15,12 +15,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.session.MapSessionRepository;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
@@ -57,4 +57,14 @@ public class LoginController {
         return ResponseEntity.ok(userResponseDto);
 
     }
+
+
+//    private final MapSessionRepository repo;
+
+
+    @GetMapping("/test")
+    public ResponseEntity<String> sessionTest(HttpServletRequest request, @AuthenticationPrincipal User user) {
+
+        return ResponseEntity.ok(user.getUsername());
+     }
 }

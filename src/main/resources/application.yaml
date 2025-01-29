@@ -17,5 +17,11 @@ spring:
   profiles:
     active: restControllerSecurity
 
+  data:
+    redis:
+      host: 192.168.0.125
+      port: 6379
+
+
 #security:
 #  type: restControllerSecurity
