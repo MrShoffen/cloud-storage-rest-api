@@ -6,16 +6,21 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.common.dto.StorageUserResponseDto;
 import org.mrshoffen.cloudstorage.security.common.entity.StorageUserDetails;
+import org.mrshoffen.cloudstorage.security.v1.FilterSecurityConfig;
 import org.mrshoffen.cloudstorage.storage.entity.StorageUser;
 import org.mrshoffen.cloudstorage.storage.mapper.StorageUserMapper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
 @RequiredArgsConstructor
+@Component
+@ConditionalOnBean(FilterSecurityConfig.class)
 public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final ObjectMapper objectMapper;

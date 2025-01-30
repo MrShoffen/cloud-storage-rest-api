@@ -19,6 +19,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
@@ -46,25 +48,10 @@ import java.util.Collections;
 @Profile("filterSecurity")
 public class FilterSecurityConfig {
 
-    private final ObjectMapper objectMapper;
-
-    private final Validator validator;
-
-    private final SecurityContextRepository securityContextRepository;
-
-    private final StorageUserMapper storageUserMapper;
+    private final JsonFormAuthenticationFilter jsonFormAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager manager) throws Exception {
-
-        var customAuthFilter = new JsonFormAuthenticationFilter("/auth/login",
-                objectMapper,
-                validator);
-
-        customAuthFilter.setAuthenticationManager(manager);
-        customAuthFilter.setAuthenticationSuccessHandler(new LoginSuccessHandler(objectMapper, storageUserMapper));
-        customAuthFilter.setAuthenticationFailureHandler(new LoginFailureHandler(objectMapper));
-        customAuthFilter.setSecurityContextRepository(securityContextRepository);
 
         return http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -73,7 +60,7 @@ public class FilterSecurityConfig {
                                 authorization.requestMatchers("/auth/login").permitAll()
                                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(customAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jsonFormAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .logout(
                         logout -> logout
                                 .logoutUrl("/auth/logout")
