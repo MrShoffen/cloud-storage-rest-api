@@ -9,17 +9,11 @@
     "details": null,
     "authenticated": true,
     "principal": {
-      "@class": "org.mrshoffen.cloudstorage.security.common.StorageUserDetails",
-      "username": "alina",
-      "password": "alina",
-      "authorities": [
-        "java.util.Collections$EmptyList",
-        []
-      ],
-      "enabled": true,
-      "accountNonLocked": true,
-      "accountNonExpired": true,
-      "credentialsNonExpired": true
+      "@class": "org.mrshoffen.cloudstorage.storage.entity.StorageUser",
+      "id": 1,
+      "username": "penis",
+      "password": null,
+      "avatarUrl": null
     },
     "credentials": null
   }
