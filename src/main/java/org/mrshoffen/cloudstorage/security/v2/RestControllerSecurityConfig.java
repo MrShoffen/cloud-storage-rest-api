@@ -12,6 +12,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.SecurityContextRepository;
 
 import java.util.Collections;
 
@@ -26,14 +28,12 @@ import java.util.Collections;
  * <p>
  * 2) Более простой дебаг через Postman
  * <p>
- * 3) Код процесса аутентификации виден в контроллере, вся логика на поверхности
- * <p>
  * 4) Нет необходимости в кастомном маппинге входного Json с логином/паролем и в кастомной валидации -
  * всё делается силами Spring
  * <p>
  * Минусы:
  * <p>
- * 1) Главный минус проистекает из 3го плюса - появляется ручная работа, т.к. код меньше интегрирован в
+ * 1) Главный минус - появляется ручная работа, т.к. код меньше интегрирован в
  * "магию" Spring Security. Приходится вручную управлять процессом аутентификации, что с внедрением
  * Spring Session с Redis так же усложняется.
  *
@@ -43,7 +43,7 @@ import java.util.Collections;
 
 @Configuration
 @Profile("restControllerSecurity")
-public class SecurityRestControllerConfig {
+public class RestControllerSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -56,18 +56,6 @@ public class SecurityRestControllerConfig {
                 .logout(AbstractHttpConfigurer::disable);
 
         return httpSecurity.build();
-    }
-
-    @Bean
-    UserDetailsService userDetailsService() {
-        User user = new User("alina", "{noop}alina", Collections.emptyList());
-        User user2 = new User("anton", "{noop}anton", Collections.emptyList());
-        return new InMemoryUserDetailsManager(user, user2);
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
     }
 
 }

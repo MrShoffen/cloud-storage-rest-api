@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.security.v2.service;
+package org.mrshoffen.cloudstorage.security.common.service;
 
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

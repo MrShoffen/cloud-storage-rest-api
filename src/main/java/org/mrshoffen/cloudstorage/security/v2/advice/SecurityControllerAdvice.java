@@ -1,6 +1,6 @@
 package org.mrshoffen.cloudstorage.security.v2.advice;
 
-import org.mrshoffen.cloudstorage.security.v2.SecurityRestControllerConfig;
+import org.mrshoffen.cloudstorage.security.v2.RestControllerSecurityConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
-@ConditionalOnBean(SecurityRestControllerConfig.class)
+@ConditionalOnBean(RestControllerSecurityConfig.class)
 public class SecurityControllerAdvice {
 
     @ExceptionHandler(BadCredentialsException.class)
@@ -33,10 +33,9 @@ public class SecurityControllerAdvice {
     public ResponseEntity<ProblemDetail> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
         String errors = e.getFieldErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining(" | "));
         var problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, errors);
-        problemDetail.setTitle(e.getClass().getSimpleName());
+        problemDetail.setTitle("Bad Request");
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(problemDetail);
-
     }
 }

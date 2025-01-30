@@ -8,21 +8,12 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
-import org.springframework.session.web.http.HeaderHttpSessionIdResolver;
-import org.springframework.session.web.http.HttpSessionIdResolver;
 
 @Configuration
 @EnableRedisHttpSession
 public class SessionConfig implements BeanClassLoaderAware {
 
     private ClassLoader loader;
-
-    //storing session id in header to prevent csrf attack
-//
-//    @Bean
-//    public HttpSessionIdResolver httpSessionIdResolver() {
-//        return HeaderHttpSessionIdResolver.xAuthToken(); // <3>
-//    }
 
     @Bean
     public RedisSerializer<Object> springSessionDefaultRedisSerializer() {
@@ -39,5 +30,4 @@ public class SessionConfig implements BeanClassLoaderAware {
     public void setBeanClassLoader(ClassLoader classLoader) {
         this.loader = classLoader;
     }
-
 }
