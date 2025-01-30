@@ -1,6 +1,6 @@
-package org.mrshoffen.cloudstorage.security.v2_rest_controller.advice;
+package org.mrshoffen.cloudstorage.security.v2.advice;
 
-import org.mrshoffen.cloudstorage.security.v2_rest_controller.SecurityRestControllerConfig;
+import org.mrshoffen.cloudstorage.security.v2.SecurityRestControllerConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;

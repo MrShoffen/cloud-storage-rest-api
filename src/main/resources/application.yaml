@@ -15,7 +15,7 @@ spring:
       hbm2ddl.auto: validate
 
   profiles:
-    active: restControllerSecurity
+    active: filterSecurity
 
   data:
     redis:

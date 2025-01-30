@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.security.v2_rest_controller;
+package org.mrshoffen.cloudstorage.security.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;

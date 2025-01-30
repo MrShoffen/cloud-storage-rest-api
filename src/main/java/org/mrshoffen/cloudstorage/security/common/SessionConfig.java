@@ -12,17 +12,17 @@ import org.springframework.session.web.http.HeaderHttpSessionIdResolver;
 import org.springframework.session.web.http.HttpSessionIdResolver;
 
 @Configuration
-@EnableRedisHttpSession // <1>
+@EnableRedisHttpSession
 public class SessionConfig implements BeanClassLoaderAware {
 
+    private ClassLoader loader;
 
     //storing session id in header to prevent csrf attack
-    @Bean
-    public HttpSessionIdResolver httpSessionIdResolver() {
-        return HeaderHttpSessionIdResolver.xAuthToken(); // <3>
-    }
-
-    private ClassLoader loader;
+//
+//    @Bean
+//    public HttpSessionIdResolver httpSessionIdResolver() {
+//        return HeaderHttpSessionIdResolver.xAuthToken(); // <3>
+//    }
 
     @Bean
     public RedisSerializer<Object> springSessionDefaultRedisSerializer() {

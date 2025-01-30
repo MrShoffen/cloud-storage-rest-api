@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.security.v2_rest_controller.dto;
+package org.mrshoffen.cloudstorage.security.common.dto;
 
 import jakarta.validation.constraints.*;
 
