@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.v1.filter.JsonFormAuthenticationFilter;
 import org.mrshoffen.cloudstorage.security.v1.handler.LoginFailureHandler;
 import org.mrshoffen.cloudstorage.security.v1.handler.LoginSuccessHandler;
+import org.mrshoffen.cloudstorage.storage.mapper.StorageUserMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -51,6 +52,8 @@ public class FilterSecurityConfig {
 
     private final SecurityContextRepository securityContextRepository;
 
+    private final StorageUserMapper storageUserMapper;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager manager) throws Exception {
 
@@ -59,7 +62,7 @@ public class FilterSecurityConfig {
                 validator);
 
         customAuthFilter.setAuthenticationManager(manager);
-        customAuthFilter.setAuthenticationSuccessHandler(new LoginSuccessHandler(objectMapper));
+        customAuthFilter.setAuthenticationSuccessHandler(new LoginSuccessHandler(objectMapper, storageUserMapper));
         customAuthFilter.setAuthenticationFailureHandler(new LoginFailureHandler(objectMapper));
         customAuthFilter.setSecurityContextRepository(securityContextRepository);
 

@@ -2,11 +2,14 @@ package org.mrshoffen.cloudstorage.security.common.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-public class UserResponseDto {
+@NoArgsConstructor
+public class StorageUserResponseDto {
+
+    private Long id;
 
     private String username;
-
 }

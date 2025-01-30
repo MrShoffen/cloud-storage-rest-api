@@ -5,8 +5,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.common.dto.LoginRequest;
-import org.mrshoffen.cloudstorage.security.common.dto.UserResponseDto;
+import org.mrshoffen.cloudstorage.security.common.dto.StorageUserResponseDto;
+import org.mrshoffen.cloudstorage.security.common.entity.StorageUserDetails;
 import org.mrshoffen.cloudstorage.security.v2.RestControllerSecurityConfig;
+import org.mrshoffen.cloudstorage.storage.entity.StorageUser;
+import org.mrshoffen.cloudstorage.storage.mapper.StorageUserMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -30,16 +33,20 @@ public class LoginController {
 
     private final SecurityContextRepository contextRepository;
 
+    private final StorageUserMapper mapper;
+
     @PostMapping
-    public ResponseEntity<UserResponseDto> login(@Valid @RequestBody LoginRequest dto,
-                                                 HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<StorageUserResponseDto> login(@Valid @RequestBody LoginRequest dto,
+                                                        HttpServletRequest request, HttpServletResponse response) {
 
         var authRequest = new UsernamePasswordAuthenticationToken(dto.username(), dto.password());
         Authentication authResult = authenticationManager.authenticate(authRequest);
         saveSecurityContext(request, response, authResult);
 
-        UserResponseDto userResponseDto = new UserResponseDto(authResult.getName());
-        return ResponseEntity.ok(userResponseDto);
+        StorageUser storageUser = ((StorageUserDetails) authResult.getPrincipal()).getUser();
+
+
+        return ResponseEntity.ok(mapper.toDto(storageUser));
     }
 
     private void saveSecurityContext(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {

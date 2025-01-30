@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.mrshoffen.cloudstorage.security.common.dto.UserResponseDto;
 
 import org.mrshoffen.cloudstorage.security.v1.exception.ValidationException;
 import org.springframework.http.HttpStatus;
@@ -15,7 +14,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 
 import java.io.IOException;
-import java.util.Map;
 
 @RequiredArgsConstructor
 public class LoginFailureHandler implements AuthenticationFailureHandler {

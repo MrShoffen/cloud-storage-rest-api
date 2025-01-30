@@ -1,6 +1,8 @@
 package org.mrshoffen.cloudstorage.security.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.mrshoffen.cloudstorage.security.common.entity.StorageUserDetails;
+import org.mrshoffen.cloudstorage.storage.entity.StorageUser;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,9 +22,12 @@ public class SessionConfig implements BeanClassLoaderAware {
         return new GenericJackson2JsonRedisSerializer(objectMapper());
     }
 
+
     private ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModules(SecurityJackson2Modules.getModules(this.loader));
+        mapper.addMixIn(StorageUserDetails.class, StorageUserDetails.class);
+        mapper.addMixIn(StorageUser.class, StorageUser.class);
         return mapper;
     }
 

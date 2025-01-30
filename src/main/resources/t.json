@@ -9,17 +9,17 @@
     "details": null,
     "authenticated": true,
     "principal": {
-      "@class": "org.springframework.security.core.userdetails.User",
-      "password": null,
+      "@class": "org.mrshoffen.cloudstorage.security.common.StorageUserDetails",
       "username": "alina",
+      "password": "alina",
       "authorities": [
-        "java.util.Collections$UnmodifiableSet",
+        "java.util.Collections$EmptyList",
         []
       ],
-      "accountNonExpired": true,
+      "enabled": true,
       "accountNonLocked": true,
-      "credentialsNonExpired": true,
-      "enabled": true
+      "accountNonExpired": true,
+      "credentialsNonExpired": true
     },
     "credentials": null
   }
