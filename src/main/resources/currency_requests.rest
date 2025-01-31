@@ -26,10 +26,10 @@ POST http://localhost:8080/auth/logout
 ##########################
 
 ### GET Защищенный эндпоинт для текущего юзера
-GET http://localhost:8080/api/v1/user
+GET http://localhost:8080/api/v1/users/me
 
 ### PATCH изменение данных
-PATCH http://localhost:8080/api/v1/user/profile
+PATCH http://localhost:8080/api/v1/users/me/profile
 Accept: application/json
 Content-Type: application/json
 
@@ -39,7 +39,7 @@ Content-Type: application/json
 }
 
 ### PATCH изменение данных
-PATCH http://localhost:8080/api/v1/user/profile
+PATCH http://localhost:8080/api/v1/users/me/profile
 Accept: application/json
 Content-Type: application/json
 
@@ -49,7 +49,7 @@ Content-Type: application/json
 }
 
 ### PATCH обновление пароля
-PATCH http://localhost:8080/api/v1/user/password
+PATCH http://localhost:8080/api/v1/users/me/password
 Accept: application/json
 Content-Type: application/json
 
@@ -60,7 +60,7 @@ Content-Type: application/json
 
 
 ### PATCH обновление пароля
-PATCH http://localhost:8080/api/v1/user/password
+PATCH http://localhost:8080/api/v1/users/me/password
 Accept: application/json
 Content-Type: application/json
 
@@ -68,6 +68,17 @@ Content-Type: application/json
   "newPassword": "alina",
   "oldPassword": "alina2"
 }
+
+### POST регистрация
+POST http://localhost:8080/api/v1/users
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "anton",
+  "password": "anton"
+}
+
 
 
 

@@ -3,6 +3,7 @@ package org.mrshoffen.cloudstorage.user.http.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.mrshoffen.cloudstorage.user.model.dto.UserCreateDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserInfoEditDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserPasswordEditDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserResponseDto;
@@ -15,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/user")
+@RequestMapping("/api/v1/users/me")
 public class UserManageController {
 
     private final UserService service;
@@ -40,7 +41,6 @@ public class UserManageController {
                                                               @Valid @RequestBody UserPasswordEditDto editDto){
 
         UserResponseDto updatedUser = service.updateUserPassword(user.getId(), editDto);
-
         return ResponseEntity.ok(updatedUser);
     }
 

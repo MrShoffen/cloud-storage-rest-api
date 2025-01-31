@@ -44,7 +44,7 @@ public class FilterSecurityConfig {
                 .authorizeHttpRequests(
                         authorization ->
                                 authorization
-                                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                                        .requestMatchers("/auth/login", "/api/v1/users").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jsonFormAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

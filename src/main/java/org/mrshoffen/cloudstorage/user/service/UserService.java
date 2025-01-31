@@ -1,6 +1,7 @@
 package org.mrshoffen.cloudstorage.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.mrshoffen.cloudstorage.user.model.dto.UserCreateDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserInfoEditDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserPasswordEditDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserResponseDto;
@@ -67,6 +68,16 @@ public class UserService {
         userEventPublisher.publishUserPasswordUpdateEvent(user.getUsername());
 
         return userMapper.toDto(user);
+    }
+
+    @Transactional
+    public UserResponseDto create(UserCreateDto userCreateDto) {
+        checkForOccupiedUsername(userCreateDto.username());
+
+        User userForSave = userMapper.toEntity(userCreateDto);
+        userRepository.save(userForSave);
+
+        return userMapper.toDto(userForSave);
     }
 
     private void checkForOccupiedUsername(String username) {

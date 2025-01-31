@@ -44,7 +44,7 @@ public class RestControllerSecurityConfig {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login").permitAll()
+                        .requestMatchers("/auth/login", "/api/v1/users").permitAll()
                         .anyRequest().authenticated()
                 )
                 .logout(AbstractHttpConfigurer::disable);
