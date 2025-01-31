@@ -1,37 +1,38 @@
 package org.mrshoffen.cloudstorage.user.service;
 
 import lombok.RequiredArgsConstructor;
-import org.mrshoffen.cloudstorage.user.dto.StorageUserEditDto;
-import org.mrshoffen.cloudstorage.user.dto.StorageUserResponseDto;
-import org.mrshoffen.cloudstorage.user.entity.StorageUser;
+import org.mrshoffen.cloudstorage.user.dto.UserEditDto;
+import org.mrshoffen.cloudstorage.user.dto.UserResponseDto;
+import org.mrshoffen.cloudstorage.user.entity.User;
+import org.mrshoffen.cloudstorage.user.events.publisher.UserEventPublisher;
 import org.mrshoffen.cloudstorage.user.exception.UserAlreadyExistsException;
 import org.mrshoffen.cloudstorage.user.exception.UserNotFoundException;
-import org.mrshoffen.cloudstorage.user.mapper.StorageUserMapper;
+import org.mrshoffen.cloudstorage.user.mapper.UserMapper;
 import org.mrshoffen.cloudstorage.user.repositroy.StorageUserRepository;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class StorageUserService {
+public class UserService {
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final UserEventPublisher userEventPublisher;
 
     private final StorageUserRepository userRepository;
 
-    private final StorageUserMapper userMapper;
+    private final UserMapper userMapper;
 
 
     @Transactional
-    public StorageUserResponseDto updateUserProfile(Long userId, StorageUserEditDto userProfileEditDto) {
-        StorageUser user = userRepository.findById(userId).
+    public UserResponseDto updateUserProfile(Long userId, UserEditDto userProfileEditDto) {
+        User user = userRepository.findById(userId).
                 orElseThrow(() -> new UserNotFoundException("User with id '%s' not found".formatted(userId)));
 
+        String oldUsername = user.getUsername();
         String newUsername = userProfileEditDto.newUsername();
         String newAvatarUrl = userProfileEditDto.newAvatarUrl();
 
-        if (!user.getUsername().equals(newUsername)) {
+        if (!oldUsername.equals(newUsername)) {
             checkForOccupiedUsername(newUsername);
         }
 
@@ -39,7 +40,8 @@ public class StorageUserService {
         user.setAvatarUrl(newAvatarUrl);
         userRepository.save(user);
 
-        eventPublisher.publishEvent(user);
+        userEventPublisher.publishUserUpdateEvent(oldUsername, user);
+
         return userMapper.toDto(user);
     }
 

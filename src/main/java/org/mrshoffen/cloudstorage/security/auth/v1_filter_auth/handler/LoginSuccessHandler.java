@@ -6,8 +6,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
 import org.mrshoffen.cloudstorage.security.auth.v1_filter_auth.FilterSecurityConfig;
-import org.mrshoffen.cloudstorage.user.entity.StorageUser;
-import org.mrshoffen.cloudstorage.user.mapper.StorageUserMapper;
+import org.mrshoffen.cloudstorage.user.entity.User;
+import org.mrshoffen.cloudstorage.user.mapper.UserMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,18 +24,18 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     private final ObjectMapper objectMapper;
 
-    private final StorageUserMapper mapper;
+    private final UserMapper mapper;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
         response.setStatus(HttpStatus.OK.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        StorageUser storageUser = ((StorageUserDetails) authentication.getPrincipal()).getUser();
+        User user = ((StorageUserDetails) authentication.getPrincipal()).getUser();
 
         objectMapper.writeValue(
                 response.getWriter(),
-                mapper.toDto(storageUser)
+                mapper.toDto(user)
         );
     }
 }

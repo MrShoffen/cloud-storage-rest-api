@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public record StorageUserEditDto(
+public record UserEditDto(
 
         @Size(min = 5, max = 20, message = "Incorrect name length! Must be between  {min} and {max}")
         @NotNull(message = "Name can't be null!")

@@ -3,12 +3,12 @@ package org.mrshoffen.cloudstorage.security.auth.v2_controller_auth.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.dto.LoginRequest;
-import org.mrshoffen.cloudstorage.user.dto.StorageUserResponseDto;
+import org.mrshoffen.cloudstorage.user.dto.UserResponseDto;
 import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
 import org.mrshoffen.cloudstorage.security.auth.v2_controller_auth.RestControllerSecurityConfig;
 import org.mrshoffen.cloudstorage.security.service.SecurityContextService;
-import org.mrshoffen.cloudstorage.user.entity.StorageUser;
-import org.mrshoffen.cloudstorage.user.mapper.StorageUserMapper;
+import org.mrshoffen.cloudstorage.user.entity.User;
+import org.mrshoffen.cloudstorage.user.mapper.UserMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -26,17 +26,17 @@ public class LoginController {
 
     private final SecurityContextService securityContextService;
 
-    private final StorageUserMapper mapper;
+    private final UserMapper mapper;
 
     @PostMapping
-    public ResponseEntity<StorageUserResponseDto> login(@Valid @RequestBody LoginRequest dto) {
+    public ResponseEntity<UserResponseDto> login(@Valid @RequestBody LoginRequest dto) {
         var authRequest = new UsernamePasswordAuthenticationToken(dto.username(), dto.password());
         Authentication authResult = authenticationManager.authenticate(authRequest);
 
         securityContextService.saveAuthToContext(authResult);
 
-        StorageUser storageUser = ((StorageUserDetails) authResult.getPrincipal()).getUser();
-        return ResponseEntity.ok(mapper.toDto(storageUser));
+        User user = ((StorageUserDetails) authResult.getPrincipal()).getUser();
+        return ResponseEntity.ok(mapper.toDto(user));
     }
 
 

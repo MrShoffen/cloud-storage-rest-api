@@ -1,20 +1,16 @@
 package org.mrshoffen.cloudstorage;
 
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
 import org.mrshoffen.cloudstorage.security.service.SecurityContextService;
-import org.mrshoffen.cloudstorage.user.dto.StorageUserEditDto;
-import org.mrshoffen.cloudstorage.user.entity.StorageUser;
+import org.mrshoffen.cloudstorage.user.entity.User;
 import org.mrshoffen.cloudstorage.user.repositroy.StorageUserRepository;
-import org.mrshoffen.cloudstorage.user.service.StorageUserService;
+import org.mrshoffen.cloudstorage.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.context.SecurityContextHolderStrategy;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,14 +24,14 @@ public class TestController {
 
     @GetMapping("/test")
     public ResponseEntity<String> sessionTest(
-            HttpServletRequest request, @AuthenticationPrincipal(expression = "getUser") StorageUser user) {
+            HttpServletRequest request, @AuthenticationPrincipal(expression = "getUser") User user) {
 
         return ResponseEntity.ok(user.getUsername());
     }
 
     private final SecurityContextService securityContextService;
 
-    private final StorageUserService storageUserService;
+    private final UserService userService;
 
     @PostMapping("/test_update")
     public ResponseEntity<?> updateUsername(

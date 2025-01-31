@@ -1,7 +1,6 @@
 package org.mrshoffen.cloudstorage.user.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +14,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Entity
 @Table(name = "users")
-public class StorageUser implements Serializable {
+public class User implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
