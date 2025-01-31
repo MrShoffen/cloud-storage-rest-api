@@ -2,7 +2,7 @@ package org.mrshoffen.cloudstorage.security.service;
 
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
-import org.mrshoffen.cloudstorage.user.entity.User;
+import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.mrshoffen.cloudstorage.user.repositroy.StorageUserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

@@ -1,8 +1,9 @@
 package org.mrshoffen.cloudstorage.user.events.publisher;
 
 import lombok.RequiredArgsConstructor;
-import org.mrshoffen.cloudstorage.user.entity.User;
-import org.mrshoffen.cloudstorage.user.events.UserUpdateEvent;
+import org.mrshoffen.cloudstorage.user.model.entity.User;
+import org.mrshoffen.cloudstorage.user.events.UserPasswordUpdateEvent;
+import org.mrshoffen.cloudstorage.user.events.UserUpdateInfoEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +13,13 @@ public class UserEventPublisher {
 
     private final ApplicationEventPublisher eventPublisher;
 
-    public void publishUserUpdateEvent(String principalUsername, User updatedUser) {
-        UserUpdateEvent userUpdateEvent = new UserUpdateEvent(principalUsername, updatedUser);
+    public void publishUserInfoUpdateEvent(String principalUsername, User updatedUser) {
+        UserUpdateInfoEvent userUpdateEvent = new UserUpdateInfoEvent(principalUsername, updatedUser);
         eventPublisher.publishEvent(userUpdateEvent);
+    }
+
+    public void publishUserPasswordUpdateEvent(String principalUsername) {
+        UserPasswordUpdateEvent userPasswordUpdateEvent = new UserPasswordUpdateEvent(principalUsername);
+        eventPublisher.publishEvent(userPasswordUpdateEvent);
     }
 }

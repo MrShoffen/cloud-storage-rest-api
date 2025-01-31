@@ -48,6 +48,26 @@ Content-Type: application/json
   "newAvatarUrl": "new _pic"
 }
 
+### PATCH обновление пароля
+PATCH http://localhost:8080/api/v1/user/password
+Accept: application/json
+Content-Type: application/json
+
+{
+  "newPassword": "alina2",
+  "oldPassword": "alina"
+}
+
+
+### PATCH обновление пароля
+PATCH http://localhost:8080/api/v1/user/password
+Accept: application/json
+Content-Type: application/json
+
+{
+  "newPassword": "alina",
+  "oldPassword": "alina2"
+}
 
 
 

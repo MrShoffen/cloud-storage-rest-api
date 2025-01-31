@@ -1,9 +1,9 @@
 package org.mrshoffen.cloudstorage.user.events;
 
-import org.mrshoffen.cloudstorage.user.entity.User;
+import org.mrshoffen.cloudstorage.user.model.entity.User;
 
 
-public record UserUpdateEvent(
+public record UserUpdateInfoEvent(
         String principalUsername,
         User updatedUser) {
 }

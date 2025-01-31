@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.user.dto;
+package org.mrshoffen.cloudstorage.user.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

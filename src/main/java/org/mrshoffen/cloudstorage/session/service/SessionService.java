@@ -2,16 +2,14 @@ package org.mrshoffen.cloudstorage.session.service;
 
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
-import org.mrshoffen.cloudstorage.user.entity.User;
+import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 
 import java.util.Collection;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor

@@ -4,7 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
 import org.mrshoffen.cloudstorage.security.service.SecurityContextService;
-import org.mrshoffen.cloudstorage.user.entity.User;
+import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.mrshoffen.cloudstorage.user.repositroy.StorageUserRepository;
 import org.mrshoffen.cloudstorage.user.service.UserService;
 import org.springframework.http.ResponseEntity;

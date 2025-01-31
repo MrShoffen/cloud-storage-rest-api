@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.user.entity;
+package org.mrshoffen.cloudstorage.user.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
