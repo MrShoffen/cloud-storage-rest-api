@@ -1,0 +1,71 @@
+### POST запрос для входа
+POST http://localhost:8080/auth/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "alina",
+  "password": "alina"
+}
+
+
+### POST запрос для входа
+POST http://localhost:8080/auth/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "anton",
+  "password": "anton"
+}
+
+
+### Logout
+POST http://localhost:8080/auth/logout
+
+##########################
+
+### GET Защищенный эндпоинт для текущего юзера
+GET http://localhost:8080/api/v1/user
+
+### PATCH изменение данных
+PATCH http://localhost:8080/api/v1/user/profile
+Accept: application/json
+Content-Type: application/json
+
+{
+  "newUsername": "alina_two",
+  "newAvatarUrl": "new _pic"
+}
+
+### PATCH изменение данных
+PATCH http://localhost:8080/api/v1/user/profile
+Accept: application/json
+Content-Type: application/json
+
+{
+  "newUsername": "alina",
+  "newAvatarUrl": "new _pic"
+}
+
+
+
+
+
+### Add same currency - 409 Conflict
+POST http://localhost:8080/currency-exchange/currencies
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+
+name=US Dollar &
+code=USD&
+sign=$
+
+### Add new incorrect currency - 400 Bad Request
+POST http://localhost:8080/currency-exchange/currencies
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+
+name=&
+code=ABC&
+sign=₽

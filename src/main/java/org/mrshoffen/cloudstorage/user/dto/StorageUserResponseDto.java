@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.security.dto;
+package org.mrshoffen.cloudstorage.user.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,4 +12,7 @@ public class StorageUserResponseDto {
     private Long id;
 
     private String username;
+
+    private String avatarUrl;
+
 }

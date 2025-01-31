@@ -23,9 +23,12 @@ spring:
       port: 6379
 
   profiles:
-#    active: restControllerSecurity
-    active: filterSecurity
+    active: restControllerSecurity
+#    active: filterSecurity
 
+#  session:
+#    redis:
+#      repository-type: indexed
 
 
 

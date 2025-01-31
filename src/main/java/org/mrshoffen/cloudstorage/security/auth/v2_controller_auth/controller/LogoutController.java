@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 @ConditionalOnBean(RestControllerSecurityConfig.class)
 public class LogoutController {
 
-//    private final List<LogoutHandler> logoutHandlers;
-
     @PostMapping
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);

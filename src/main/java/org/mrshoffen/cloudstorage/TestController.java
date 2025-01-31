@@ -5,8 +5,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
 import org.mrshoffen.cloudstorage.security.service.SecurityContextService;
+import org.mrshoffen.cloudstorage.user.dto.StorageUserEditDto;
 import org.mrshoffen.cloudstorage.user.entity.StorageUser;
 import org.mrshoffen.cloudstorage.user.repositroy.StorageUserRepository;
+import org.mrshoffen.cloudstorage.user.service.StorageUserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -31,14 +33,13 @@ public class TestController {
         return ResponseEntity.ok(user.getUsername());
     }
 
-    private final SecurityContextHolderStrategy securityContextHolderStrategy = SecurityContextHolder.getContextHolderStrategy();
-
-
     private final SecurityContextService securityContextService;
+
+    private final StorageUserService storageUserService;
 
     @PostMapping("/test_update")
     public ResponseEntity<?> updateUsername(
-             Authentication authentication
+            Authentication authentication
     ) {
         StorageUserDetails storageUser = (StorageUserDetails) authentication.getPrincipal();
         storageUser.getUser().setUsername("penis");
@@ -48,7 +49,9 @@ public class TestController {
 
         securityContextService.updateAuthInContext(newAuth);
 
+//        newAuth.setDetails();
 
+//        storageUserService.updateUser(new StorageUserEditDto(this, "new"));
         return ResponseEntity.ok().build();
     }
 

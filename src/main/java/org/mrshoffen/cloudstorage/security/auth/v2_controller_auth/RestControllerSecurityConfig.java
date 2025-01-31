@@ -1,11 +1,13 @@
 package org.mrshoffen.cloudstorage.security.auth.v2_controller_auth;
 
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.web.SecurityFilterChain;
 
 
@@ -34,6 +36,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @Profile("restControllerSecurity")
+@RequiredArgsConstructor
 public class RestControllerSecurityConfig {
 
     @Bean
