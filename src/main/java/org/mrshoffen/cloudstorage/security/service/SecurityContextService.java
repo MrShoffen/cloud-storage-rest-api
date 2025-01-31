@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-//todo maybe there is a better way to update auth context in redis
 @Service
 @RequiredArgsConstructor
 public class SecurityContextService {
