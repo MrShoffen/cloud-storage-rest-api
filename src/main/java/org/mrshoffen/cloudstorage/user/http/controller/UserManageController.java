@@ -3,7 +3,6 @@ package org.mrshoffen.cloudstorage.user.http.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.mrshoffen.cloudstorage.user.model.dto.UserCreateDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserInfoEditDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserPasswordEditDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserResponseDto;

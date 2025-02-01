@@ -19,7 +19,7 @@ public class SecurityContextService {
     private final SecurityContextRepository contextRepository;
 
     public void saveAuthToContext(Authentication authentication) {
-        ServletRequestAttributes attributes = getRequestAttributes();
+        ServletRequestAttributes attributes = obtainRequestAttributes();
 
         SecurityContext context = securityContextHolderStrategy.createEmptyContext();
         context.setAuthentication(authentication);
@@ -28,15 +28,7 @@ public class SecurityContextService {
         contextRepository.saveContext(context, attributes.getRequest(), attributes.getResponse());
     }
 
-    public void updateAuthInContext(Authentication authentication) {
-        ServletRequestAttributes attributes = getRequestAttributes();
-        SecurityContext context = securityContextHolderStrategy.getContext();
-        context.setAuthentication(authentication);
-        securityContextHolderStrategy.setContext(context);
-        contextRepository.saveContext(context, attributes.getRequest(), attributes.getResponse());
-    }
-
-    private ServletRequestAttributes getRequestAttributes() {
+    private ServletRequestAttributes obtainRequestAttributes() {
         ServletRequestAttributes attributes =
                 (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         if (attributes == null) {
@@ -44,12 +36,4 @@ public class SecurityContextService {
         }
         return attributes;
     }
-
-
-//    public void handleUserUpdatedEvent(UserUpdateEvent event) {
-//        StorageUserDetails storageUserDetails = new StorageUserDetails(event.getUser());
-//        UsernamePasswordAuthenticationToken authenticated = UsernamePasswordAuthenticationToken.authenticated(storageUserDetails, null, List.of());
-//        updateAuthInContext(authenticated);
-//    }
-
 }

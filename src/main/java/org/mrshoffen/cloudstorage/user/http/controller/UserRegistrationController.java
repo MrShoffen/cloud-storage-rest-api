@@ -3,15 +3,10 @@ package org.mrshoffen.cloudstorage.user.http.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.mrshoffen.cloudstorage.user.mapper.UserMapper;
 import org.mrshoffen.cloudstorage.user.model.dto.UserCreateDto;
-import org.mrshoffen.cloudstorage.user.model.dto.UserInfoEditDto;
-import org.mrshoffen.cloudstorage.user.model.dto.UserPasswordEditDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserResponseDto;
-import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.mrshoffen.cloudstorage.user.service.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 

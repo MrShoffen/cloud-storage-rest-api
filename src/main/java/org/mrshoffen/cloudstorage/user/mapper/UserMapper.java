@@ -1,6 +1,5 @@
 package org.mrshoffen.cloudstorage.user.mapper;
 
-import lombok.RequiredArgsConstructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mrshoffen.cloudstorage.user.model.dto.UserCreateDto;

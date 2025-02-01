@@ -13,7 +13,6 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 
 @Configuration
 @EnableRedisIndexedHttpSession
-//@EnableRedisHttpSession
 public class SessionConfig implements BeanClassLoaderAware {
 
     private ClassLoader loader;
@@ -32,9 +31,6 @@ public class SessionConfig implements BeanClassLoaderAware {
                 JsonTypeInfo.As.PROPERTY  // Добавить информацию о типе
         );
         mapper.registerModules(SecurityJackson2Modules.getModules(this.loader));
-//        mapper.addMixIn(StorageUserDetails.class, StorageUserDetails.class);
-//        mapper.addMixIn(StorageUser.class, StorageUser.class);
-//        mapper.addMixIn(Long.class, Long.class);
         return mapper;
     }
 

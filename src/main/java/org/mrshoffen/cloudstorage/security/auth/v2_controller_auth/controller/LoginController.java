@@ -38,6 +38,4 @@ public class LoginController {
         User user = ((StorageUserDetails) authResult.getPrincipal()).getUser();
         return ResponseEntity.ok(mapper.toDto(user));
     }
-
-
 }
