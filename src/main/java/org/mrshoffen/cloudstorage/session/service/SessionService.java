@@ -11,6 +11,8 @@ import org.springframework.web.context.request.RequestContextHolder;
 
 import java.util.Collection;
 
+import static org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
+
 @Service
 @RequiredArgsConstructor
 public class SessionService {
@@ -19,15 +21,20 @@ public class SessionService {
 
     public void updateAllUserSessions(String userForUpdate, User updatedUser) {
         Collection<? extends Session> userSessions = sessionRepository.findByPrincipalName(userForUpdate).values();
-
+        updatedUser.setPassword(null);
         for (Session session : userSessions) {
-            SecurityContext context = session.getAttribute("SPRING_SECURITY_CONTEXT");
-            ((StorageUserDetails) context.getAuthentication().getPrincipal()).setUser(updatedUser);
-            session.setAttribute("SPRING_SECURITY_CONTEXT", context);
-            RedisIndexedSessionRepository.RedisSession redSession = (RedisIndexedSessionRepository.RedisSession) session;
-
-            sessionRepository.save(redSession);
+            updateUserSession(updatedUser, session);
         }
+    }
+
+    public void updateUserSession(User updatedUser, Session session) {
+        SecurityContext context = session.getAttribute(SPRING_SECURITY_CONTEXT_KEY);
+        ((StorageUserDetails) context.getAuthentication().getPrincipal()).setUser(updatedUser);
+
+        session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, context);
+        RedisIndexedSessionRepository.RedisSession redSession = (RedisIndexedSessionRepository.RedisSession) session;
+
+        sessionRepository.save(redSession);
     }
 
     public void invalidateAllUserOtherSessions(String currentUser) {

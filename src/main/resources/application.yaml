@@ -17,6 +17,7 @@ spring:
       default_schema: cloudStorage
 
 
+
   data:
     redis:
       host: 192.168.0.125

@@ -1,17 +1,12 @@
 package org.mrshoffen.cloudstorage.user.model.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
-@AllArgsConstructor
 @Entity
 @Table(name = "users")
 public class User implements Serializable {
@@ -23,7 +18,7 @@ public class User implements Serializable {
     @Column(name = "username", unique = true, nullable = false)
     private String username;
 
-    @Column(name = "password",nullable = false)
+    @Column(name = "password", nullable = false)
     private String password;
 
     @Column(name = "avatar_url")

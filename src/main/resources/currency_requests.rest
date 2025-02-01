@@ -35,7 +35,7 @@ Content-Type: application/json
 
 {
   "newUsername": "alina_two",
-  "newAvatarUrl": "new _pic"
+  "newAvatarUrl": "new_pic"
 }
 
 ### PATCH изменение данных
@@ -54,7 +54,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "newPassword": "alina2",
+  "newPassword": "alina",
   "oldPassword": "alina"
 }
 
@@ -75,7 +75,7 @@ Accept: application/json
 Content-Type: application/json
 
 {
-  "username": "anton",
+  "username": "alinak",
   "password": "anton"
 }
 

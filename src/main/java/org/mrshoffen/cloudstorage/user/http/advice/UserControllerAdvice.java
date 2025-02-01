@@ -31,7 +31,7 @@ public class UserControllerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ProblemDetail> handleUserAlreadyExistException(UserAlreadyExistsException e) {
         ProblemDetail problem = generateProblemDetail(CONFLICT, e.getMessage());
-        return ResponseEntity.status(UNAUTHORIZED).body(problem);
+        return ResponseEntity.status(CONFLICT).body(problem);
     }
 
     @ExceptionHandler(UserNotFoundException.class)
