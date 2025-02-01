@@ -10,7 +10,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
-public class EventListener {
+public class SessionEventListener {
 
     private final SessionService sessionService;
 

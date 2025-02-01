@@ -7,7 +7,7 @@ import org.mrshoffen.cloudstorage.user.model.dto.UserInfoEditDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserPasswordEditDto;
 import org.mrshoffen.cloudstorage.user.model.dto.UserResponseDto;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
-import org.mrshoffen.cloudstorage.user.mapper.UserMapper;
+import org.mrshoffen.cloudstorage.user.util.mapper.UserMapper;
 import org.mrshoffen.cloudstorage.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

@@ -8,7 +8,7 @@ import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
 import org.mrshoffen.cloudstorage.security.auth.v2_controller_auth.RestControllerSecurityConfig;
 import org.mrshoffen.cloudstorage.security.service.SecurityContextService;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
-import org.mrshoffen.cloudstorage.user.mapper.UserMapper;
+import org.mrshoffen.cloudstorage.user.util.mapper.UserMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;

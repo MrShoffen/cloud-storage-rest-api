@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
 import org.mrshoffen.cloudstorage.security.auth.v1_filter_auth.FilterSecurityConfig;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
-import org.mrshoffen.cloudstorage.user.mapper.UserMapper;
+import org.mrshoffen.cloudstorage.user.util.mapper.UserMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

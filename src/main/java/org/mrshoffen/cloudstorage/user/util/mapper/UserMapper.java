@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.user.mapper;
+package org.mrshoffen.cloudstorage.user.util.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

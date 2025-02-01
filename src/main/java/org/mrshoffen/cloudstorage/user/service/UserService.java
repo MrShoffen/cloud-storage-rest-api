@@ -10,7 +10,7 @@ import org.mrshoffen.cloudstorage.user.events.publisher.UserEventPublisher;
 import org.mrshoffen.cloudstorage.user.exception.IncorrectPasswordException;
 import org.mrshoffen.cloudstorage.user.exception.UserAlreadyExistsException;
 import org.mrshoffen.cloudstorage.user.exception.UserNotFoundException;
-import org.mrshoffen.cloudstorage.user.mapper.UserMapper;
+import org.mrshoffen.cloudstorage.user.util.mapper.UserMapper;
 import org.mrshoffen.cloudstorage.user.repositroy.StorageUserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
