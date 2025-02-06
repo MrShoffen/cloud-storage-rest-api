@@ -16,16 +16,27 @@ spring:
       hbm2ddl.auto: validate
       default_schema: cloudStorage
 
-
-
   data:
     redis:
       host: 192.168.0.125
       port: 6379
 
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
   profiles:
     active: restControllerSecurity
 #    active: filterSecurity
+
+
+minio:
+  bucket-name: user-files
+  endpoint: http://192.168.0.125:9000
+  user: user
+  password: 12345678
+
 
 #  session:
 #    redis:

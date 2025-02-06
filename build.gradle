@@ -40,9 +40,11 @@ dependencies {
 
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.liquibase:liquibase-core'
-//    implementation 'org.liquibase:liquibase-core'
-    // https://mvnrepository.com/artifact/com.nimbusds/nimbus-jose-jwt
-    implementation 'com.nimbusds:nimbus-jose-jwt:10.0.1'
+
+
+    // https://mvnrepository.com/artifact/io.minio/minio
+    implementation 'io.minio:minio:8.5.17'
+
 
 
     compileOnly 'org.projectlombok:lombok'

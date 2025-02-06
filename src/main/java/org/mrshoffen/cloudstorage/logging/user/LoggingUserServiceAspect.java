@@ -57,8 +57,6 @@ public class LoggingUserServiceAspect {
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String method = joinPoint.getSignature().getName();
         log.info("{} -> {} :  {}", className, method,  Arrays.toString(args));
-
-
     }
 
 }

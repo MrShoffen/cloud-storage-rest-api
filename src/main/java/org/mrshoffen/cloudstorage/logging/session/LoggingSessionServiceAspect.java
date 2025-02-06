@@ -111,8 +111,11 @@ public class LoggingSessionServiceAspect {
         var session = (RedisIndexedSessionRepository.RedisSession) args[0];
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String method = joinPoint.getSignature().getName();
-        log.info("  {} : {} - id:[{}] - data:[{}]", className, method, session.getId(),
-                ((SecurityContext)session.getAttribute(SPRING_SECURITY_CONTEXT_KEY)).getAuthentication());
+        SecurityContext context = session.getAttribute(SPRING_SECURITY_CONTEXT_KEY);
+        if (context != null) {
+            log.info("  {} : {} - id:[{}] - data:[{}]", className, method, session.getId(),
+                    context.getAuthentication());
+        }
     }
 
 }

@@ -1,5 +1,5 @@
 ### POST запрос для входа
-POST http://localhost:8080/auth/login
+POST http://localhost:8080/api/v1/auth/login
 Accept: application/json
 Content-Type: application/json
 
@@ -10,18 +10,18 @@ Content-Type: application/json
 
 
 ### POST запрос для входа
-POST http://localhost:8080/auth/login
+POST http://localhost:8080/api/v1/auth/login
 Accept: application/json
 Content-Type: application/json
 
 {
   "username": "anton",
-  "password": "anton"
+  "password": "antone"
 }
 
 
 ### Logout
-POST http://localhost:8080/auth/logout
+POST http://localhost:8080/api/v1/auth/logout
 
 ##########################
 
@@ -83,20 +83,43 @@ Content-Type: application/json
 
 
 
-### Add same currency - 409 Conflict
-POST http://localhost:8080/currency-exchange/currencies
+
+
+
+
+
+
+
+
+
+
+
+### POST запрос для входа
+POST http://localhost:8080/api/v1/auth/login
 Accept: application/json
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
-name=US Dollar &
-code=USD&
-sign=$
+{
+  "username": "maxim",
+  "password": "maxim"
+}
 
-### Add new incorrect currency - 400 Bad Request
-POST http://localhost:8080/currency-exchange/currencies
+### PATCH изменение данных
+PATCH http://localhost:8080/api/v1/users/me/profile
 Accept: application/json
-Content-Type: application/x-www-form-urlencoded
+Content-Type: application/json
 
-name=&
-code=ABC&
-sign=₽
+{
+  "newUsername": "antonov",
+  "newAvatarUrl": "new_pic"
+}
+
+### PATCH обновление пароля
+PATCH http://localhost:8080/api/v1/users/me/password
+Accept: application/json
+Content-Type: application/json
+
+{
+  "newPassword": "maxim",
+  "oldPassword": "maxim"
+}

@@ -16,7 +16,6 @@ public class LoggingSecurityAspect {
     public void loadingUserFromRepoPointcut(String username) {
     }
 
-
     @AfterReturning(value = "loadingUserFromRepoPointcut(username)", returning = "user")
     public void afterLoadingUser(JoinPoint joinPoint, String username, UserDetails user) {
         String className = joinPoint.getTarget().getClass().getSimpleName();
