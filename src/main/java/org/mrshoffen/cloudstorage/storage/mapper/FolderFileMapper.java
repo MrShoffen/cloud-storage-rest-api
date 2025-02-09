@@ -3,10 +3,9 @@ package org.mrshoffen.cloudstorage.storage.mapper;
 import io.minio.messages.Item;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mrshoffen.cloudstorage.storage.dto.FileResponseDto;
-import org.mrshoffen.cloudstorage.storage.dto.FolderFileResponseDto;
-import org.mrshoffen.cloudstorage.storage.dto.FolderResponseDto;
-import org.springframework.util.StringUtils;
+import org.mrshoffen.cloudstorage.storage.dto.response.FileResponseDto;
+import org.mrshoffen.cloudstorage.storage.dto.response.FolderFileResponseDto;
+import org.mrshoffen.cloudstorage.storage.dto.response.FolderResponseDto;
 
 @Mapper(componentModel = "spring")
 public interface FolderFileMapper {
@@ -31,6 +30,7 @@ public interface FolderFileMapper {
     @Mapping(target = "folder", source = "item.dir")
     @Mapping(target = "path", source = "relativePath")
     @Mapping(target = "name", source = "simpleName")
+    @Mapping(target = "lastModified", expression = "java(item.lastModified())")
     FileResponseDto toFileResponseDto(Item item, String simpleName, String relativePath);
 
     @Mapping(target = "folder", source = "item.dir")

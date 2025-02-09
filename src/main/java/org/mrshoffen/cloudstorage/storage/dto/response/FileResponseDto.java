@@ -1,9 +1,10 @@
-package org.mrshoffen.cloudstorage.storage.dto;
+package org.mrshoffen.cloudstorage.storage.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.experimental.SuperBuilder;
+
+import java.time.ZonedDateTime;
 
 @Data
 @AllArgsConstructor()
@@ -11,4 +12,5 @@ import lombok.experimental.SuperBuilder;
 public class FileResponseDto extends FolderFileResponseDto {
 
     Long size;
+    ZonedDateTime lastModified;
 }

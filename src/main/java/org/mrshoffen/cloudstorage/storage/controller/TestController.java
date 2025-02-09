@@ -3,8 +3,8 @@ package org.mrshoffen.cloudstorage.storage.controller;
 import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.dto.FolderFileResponseDto;
-import org.mrshoffen.cloudstorage.storage.dto.FolderResponseDto;
+import org.mrshoffen.cloudstorage.storage.dto.request.CopyRequestDto;
+import org.mrshoffen.cloudstorage.storage.dto.response.FolderFileResponseDto;
 import org.mrshoffen.cloudstorage.storage.service.MinioService;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/test")
+@RequestMapping("/api/v1/folders") //todo rename endpoint
 @RequiredArgsConstructor
 public class TestController {
 
@@ -44,6 +44,15 @@ public class TestController {
     @PostMapping
     public void upload(@RequestPart(required = false, name = "files") List<MultipartFile> files, String path) {
 
+
+        return;
+    }
+
+    @PostMapping("/copy")
+    public void copyObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                           @RequestBody CopyRequestDto copyDto) {
+
+        minioService.copyUserFiles(user.getId(), copyDto);
 
         return;
     }
