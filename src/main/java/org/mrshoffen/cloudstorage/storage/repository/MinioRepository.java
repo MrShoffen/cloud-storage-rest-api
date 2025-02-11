@@ -1,14 +1,13 @@
 package org.mrshoffen.cloudstorage.storage.repository;
 
 import io.minio.*;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.MinioException;
-import io.minio.messages.DeleteError;
+import io.minio.errors.*;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.catalina.connector.Response;
+import org.mrshoffen.cloudstorage.storage.exception.ConflictFileNameException;
 import org.mrshoffen.cloudstorage.storage.exception.FileNotFoundException;
 import org.mrshoffen.cloudstorage.storage.exception.MinioStorageException;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,45 +25,36 @@ public class MinioRepository {
 
     private final MinioClient minioClient;
 
-    @SneakyThrows
+
     public void deleteDirectory(String folderDeletePath) {
+        checkFolderExistsConflict(folderDeletePath);
+
         List<DeleteObject> listForDelete = getFilesWithPrefix(folderDeletePath, true)
                 .stream()
                 .map(Item::objectName)
                 .map(DeleteObject::new)
                 .toList();
 
-//todo catch exception - if resource doesnt exist
-        Iterable<Result<DeleteError>> results = minioClient.removeObjects(
+        minioClient.removeObjects(
                 RemoveObjectsArgs.builder()
                         .bucket(bucket)
                         .objects(listForDelete)
                         .build()
         );
-
-        for (Result<DeleteError> result : results) {
-            DeleteError error = result.get();
-            String x = "Error in deleting object " + error.objectName() + "; " + error.message();
-            System.out.println(
-                    x);
-        }
-
     }
+
 
     @SneakyThrows
     public void deleteFile(String fileDeletePath) {
-        try {
-            minioClient.removeObject(
-                    RemoveObjectArgs.builder()
-                            .bucket(bucket)
-                            .object(fileDeletePath)
-                            .build()
-            );
-        } catch (Exception e) {
-
-            System.out.println();
+        if (!fileExists(fileDeletePath)) {
+            throw new FileNotFoundException("'%s' не существует в исходной папке".formatted(fileDeletePath));
         }
-
+        minioClient.removeObject(
+                RemoveObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(fileDeletePath)
+                        .build()
+        );
     }
 
     public InputStream downloadFile(String fullFilePath) {
@@ -79,7 +69,7 @@ public class MinioRepository {
             return stream;
         } catch (ErrorResponseException e) {
             if (e.response().code() == Response.SC_NOT_FOUND) {
-                throw new FileNotFoundException("'%s' не найден".formatted(fullFilePath), e);
+                throw new FileNotFoundException("'%s' не существует в исходной папке".formatted(extractSimpleName(fullFilePath)), e);
             }
             throw new MinioStorageException("Ошибка в хранилище файлов", e);
         } catch (Exception e) {
@@ -89,6 +79,9 @@ public class MinioRepository {
 
     @SneakyThrows
     public void copyDirectory(String fullTargetPath, String fullSourcePath) {
+        checkFolderConflict(fullTargetPath);
+        checkFolderExistsConflict(fullSourcePath);
+
         getFilesWithPrefix(fullSourcePath, true)
                 .stream()
                 .map(Item::objectName)
@@ -100,23 +93,30 @@ public class MinioRepository {
 
     @SneakyThrows
     public void copyFile(String fullTargetPath, String fullSourcePath) {
-        minioClient.copyObject(
-                CopyObjectArgs.builder()
-                        .bucket(bucket)
-                        .object(fullTargetPath)
-                        .source(
-                                CopySource.builder()
-                                        .bucket(bucket)
-                                        .object(fullSourcePath)
-                                        .build()
-                        )
-                        .build()
-        );
-    }//todo override to 2 functions
+        checkFileConflict(fullTargetPath);
 
-    public List<Item> getFolderItems(String fullPathToFolder) {
-        return getFilesWithPrefix(fullPathToFolder, false);
-    }
+        try {
+            minioClient.copyObject(
+                    CopyObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(fullTargetPath)
+                            .source(
+                                    CopySource.builder()
+                                            .bucket(bucket)
+                                            .object(fullSourcePath)
+                                            .build()
+                            )
+                            .build()
+            );
+        } catch (ErrorResponseException e) {
+            if (e.response().code() == Response.SC_NOT_FOUND) {
+                throw new FileNotFoundException("'%s' не существует в исходной папке".formatted(extractSimpleName(fullTargetPath)), e);
+            }
+            throw new MinioStorageException("Ошибка в хранилище файлов", e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }//todo override to 2 functions
 
 
     @SneakyThrows
@@ -140,6 +140,10 @@ public class MinioRepository {
     }
 
 
+    public List<Item> getFolderItems(String fullPathToFolder) {
+        return getFilesWithPrefix(fullPathToFolder, false);
+    }
+
     private List<Item> getFilesWithPrefix(String prefix, boolean recursive) {
         Iterable<Result<Item>> objects = minioClient.listObjects(
                 ListObjectsArgs.builder()
@@ -154,14 +158,38 @@ public class MinioRepository {
                             try {
                                 return result.get();
                             } catch (Exception e) {
-                                //todo throw specified exception
                                 throw new RuntimeException("Error occurred while getting items from folder " + prefix, e);
                             }
                         }
                 )
                 .toList();
+    }
+
+    private void checkFolderConflict(String fullFolderPath) {
+        if (folderExists(fullFolderPath)) {
+            throw new ConflictFileNameException("'%s' уже существует в целевой папке"
+                    .formatted(extractSimpleName(fullFolderPath)));
+        }
+    }
+
+    @SneakyThrows
+    private void checkFileConflict(String fullFilePath) {
+        if (fileExists(fullFilePath)) {
+            throw new ConflictFileNameException("'%s' уже существует в целевой папке"
+                    .formatted(extractSimpleName(fullFilePath)));
+        }
+    }
+
+    static String extractSimpleName(String fullPath) {
+        int lastSlashIndex = fullPath.lastIndexOf('/', fullPath.length() - 2);
+        return fullPath.substring(lastSlashIndex + 1);
+    }
 
 
+    private void checkFolderExistsConflict(String folderPath) {
+        if (!folderExists(folderPath)) {
+            throw new FileNotFoundException("'%s' не существует в исходной папке".formatted(extractSimpleName(folderPath)));
+        }
     }
 
 }

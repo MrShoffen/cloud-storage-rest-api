@@ -36,7 +36,6 @@ public class MinioService {
                 .toList();
 
         return filesAndFolders.stream()
-                .sorted((o1, o2) -> Boolean.compare(o2.isFolder(), o1.isFolder()))
                 .toList();
     }
 
@@ -57,20 +56,20 @@ public class MinioService {
         return null;
     }
 
-    @SneakyThrows
+
     public void copyUserItems(Long userId, CopyMoveRequest copyDto) {
         String userRootFolder = userId.toString() + "/";
         String fullSourcePath = userRootFolder + copyDto.sourcePath();
         String fullTargetPath = userRootFolder + copyDto.targetPath();
 
-        //todo move to parent abstract class
-        if (isFolderPath(fullTargetPath)) {
-            checkFolderConflict(fullTargetPath);
-            minioRepository.copyDirectory(fullTargetPath, fullSourcePath);
-        } else {
-            checkFileConflict(fullTargetPath);
-            minioRepository.copyFile(fullTargetPath, fullSourcePath);
-        }
+
+            if (isFolderPath(fullTargetPath)) {
+                minioRepository.copyDirectory(fullTargetPath, fullSourcePath);
+            } else {
+                minioRepository.copyFile(fullTargetPath, fullSourcePath);
+            }
+
+
     }
 
 
@@ -94,38 +93,18 @@ public class MinioService {
 
 
         if (isFolderPath(fullTargetPath)) {
-            checkFolderConflict(fullTargetPath);
             minioRepository.copyDirectory(fullTargetPath, fullSourcePath);
             minioRepository.deleteDirectory(fullSourcePath);
         } else {
-            checkFileConflict(fullTargetPath);
             minioRepository.copyFile(fullTargetPath, fullSourcePath);
             minioRepository.deleteFile(fullSourcePath);
         }
     }
 
-    private void checkFolderConflict(String fullFolderPath) {
-        if (minioRepository.folderExists(fullFolderPath)) {
-            throw new ConflictFileNameException("'%s' уже существует в целевой папке"
-                    .formatted(extractSimpleName(fullFolderPath)));
-        }
-    }
 
-    @SneakyThrows
-    private void checkFileConflict(String fullFilePath) {
-        if (minioRepository.fileExists(fullFilePath)) {
-            throw new ConflictFileNameException("'%s' уже существует в целевой папке"
-                    .formatted(extractSimpleName(fullFilePath)));
-        }
-    }
 
     static boolean isFolderPath(String fullTargetPath) {
         return fullTargetPath.endsWith("/");
-    }
-
-    static String extractSimpleName(String fullPath) {
-        int lastSlashIndex = fullPath.lastIndexOf('/', fullPath.length() - 2);
-        return fullPath.substring(lastSlashIndex + 1);
     }
 
 }
