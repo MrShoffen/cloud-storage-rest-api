@@ -83,7 +83,7 @@ public class UserService {
     private void checkForOccupiedUsername(String username) {
         userRepository.findByUsernameIgnoreCase(username)
                 .ifPresent(u -> {
-                    throw new UserAlreadyExistsException("User with username '%s' already exists!"
+                    throw new UserAlreadyExistsException("Пользователь с именем '%s' уже существует"
                             .formatted(u.getUsername()));
                 });
     }

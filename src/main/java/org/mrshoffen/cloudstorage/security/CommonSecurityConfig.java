@@ -47,12 +47,9 @@ public class CommonSecurityConfig {
                 "http://192.168.0.125:80",
                 "http://localhost:5173"
         ));
-        configuration.setAllowedMethods(List.of(
-                "GET", "POST", "PATCH", "DELETE", "OPTIONS"
-        ));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
-
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

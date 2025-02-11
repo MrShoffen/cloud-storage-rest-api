@@ -17,7 +17,7 @@ public class SecurityControllerAdvice {
     public ResponseEntity<ProblemDetail> handleBadCredentialsException(BadCredentialsException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.UNAUTHORIZED,
-                "Invalid username or password"
+                "Неправильное имя пользователя или пароль"
         );
         problem.setTitle("Unauthorized");
 

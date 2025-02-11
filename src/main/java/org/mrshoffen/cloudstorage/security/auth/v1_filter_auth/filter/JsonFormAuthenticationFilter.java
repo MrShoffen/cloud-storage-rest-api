@@ -34,7 +34,7 @@ public class JsonFormAuthenticationFilter extends AbstractAuthenticationProcessi
     private final Validator validator;
 
     @Autowired
-    public JsonFormAuthenticationFilter(@Value("/auth/login") String defaultFilterProcessesUrl,
+    public JsonFormAuthenticationFilter(@Value("/api/v1/auth/login") String defaultFilterProcessesUrl,
                                         AuthenticationManager authenticationManager,
                                         ObjectMapper objectMapper,
                                         Validator validator) {

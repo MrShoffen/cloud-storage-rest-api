@@ -31,6 +31,7 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     public void onAuthenticationFailure(
             HttpServletRequest request, HttpServletResponse response, AuthenticationException exception
     ) throws IOException {
+        response.setCharacterEncoding("UTF-8");
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ProblemDetail problemDetail = specifyExceptionType(exception);
@@ -44,7 +45,7 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
 
     private ProblemDetail specifyExceptionType(AuthenticationException exception) {
         return switch (exception) {
-            case BadCredentialsException _ -> generateProblemDetail(UNAUTHORIZED,"Invalid username or password");
+            case BadCredentialsException _ -> generateProblemDetail(UNAUTHORIZED,"Неправильное имя пользователя или пароль");
             case ValidationAuthException _ -> generateProblemDetail(BAD_REQUEST, exception.getMessage());
             case AuthenticationServiceException _ -> generateProblemDetail(METHOD_NOT_ALLOWED, exception.getMessage());
             default -> generateProblemDetail(INTERNAL_SERVER_ERROR, exception.getMessage());

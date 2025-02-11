@@ -1,10 +1,9 @@
 package org.mrshoffen.cloudstorage.storage.advice;
 
-import org.mrshoffen.cloudstorage.storage.exception.ConflictNameException;
+import org.mrshoffen.cloudstorage.storage.exception.ConflictFileNameException;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -12,8 +11,8 @@ import static org.springframework.http.HttpStatus.*;
 public class StorageControllerAdvice {
 
 
-    @ExceptionHandler(ConflictNameException.class)
-    public ResponseEntity<ProblemDetail> handleConflictNameException(ConflictNameException ex) {
+    @ExceptionHandler(ConflictFileNameException.class)
+    public ResponseEntity<ProblemDetail> handleConflictNameException(ConflictFileNameException ex) {
         ProblemDetail problem = generateProblemDetail(CONFLICT, ex.getMessage());
         return ResponseEntity.status(CONFLICT).body(problem);
     }

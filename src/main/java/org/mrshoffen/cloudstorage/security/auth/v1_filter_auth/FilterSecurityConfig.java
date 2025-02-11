@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 
 /**
@@ -36,15 +37,19 @@ public class FilterSecurityConfig {
 
     private final JsonFormAuthenticationFilter jsonFormAuthenticationFilter;
 
+    private final UrlBasedCorsConfigurationSource corsSource;
+
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager manager) throws Exception {
 
         return http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsSource))
                 .authorizeHttpRequests(
                         authorization ->
                                 authorization
-                                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
+                                        .requestMatchers( "/api/v1/auth/login").permitAll()
                                         .requestMatchers(HttpMethod.POST, "api/v1/users").permitAll()
                                         .anyRequest().authenticated()
                 )

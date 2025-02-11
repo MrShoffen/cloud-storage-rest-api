@@ -15,9 +15,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(ElementType.FIELD)
 @Retention(RUNTIME)
 @Constraint(validatedBy = {})
-@Size(min = 5, max = 20, message = "Incorrect name length! Must be between  {min} and {max}")
+@Size(min = 5, max = 20, message = "Длина имени пользователя должна быть между  {min} и {max} символами")
 @NotBlank(message = "Username can't be empty!")
-@Pattern(regexp = "^[a-zA-Z]+[a-zA-Z_]*[a-zA-Z.]+$", message = "Incorrect symbols in username!")
+@Pattern(regexp = "^[a-zA-Z0-9]+[a-zA-Z_0-9]*[a-zA-Z0-9]+$", message = "Недопустимые символы в имени пользователя")
 public @interface ValidUsername {
     String message() default "Incorrect username";
     Class<?>[] groups() default { };

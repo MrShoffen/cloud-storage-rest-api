@@ -16,9 +16,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target(ElementType.FIELD)
 @Retention(RUNTIME)
 @Constraint(validatedBy = {})
-@Size(min = 5, max = 20, message = "Incorrect password length! Must be between  {min} and {max}")
-@NotBlank(message = "Password can't be empty!")
-@Pattern(regexp = "^[a-zA-Z0-9!@#$%^&*(),.?:{}|<>/`~+=-_';]*$", message = "Incorrect symbols in password!")
+@Size(min = 5, max = 20, message = "Длина пароля должна быть между  {min} и {max} символами")
+@NotBlank(message = "Пароль не должен быть пустым")
+@Pattern(regexp = "^[a-zA-Z0-9!@#$%^&*(),.?:{}|<>/`~+=-_';]*$", message = "Недопустимые символы в пароле")
 public @interface ValidPassword {
     String message() default "Incorrect password";
     Class<?>[] groups() default { };
