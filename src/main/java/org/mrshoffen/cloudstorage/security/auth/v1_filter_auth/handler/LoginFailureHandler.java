@@ -45,9 +45,9 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
 
     private ProblemDetail specifyExceptionType(AuthenticationException exception) {
         return switch (exception) {
-            case BadCredentialsException _ -> generateProblemDetail(UNAUTHORIZED,"Неправильное имя пользователя или пароль");
-            case ValidationAuthException _ -> generateProblemDetail(BAD_REQUEST, exception.getMessage());
-            case AuthenticationServiceException _ -> generateProblemDetail(METHOD_NOT_ALLOWED, exception.getMessage());
+            case BadCredentialsException unAuth -> generateProblemDetail(UNAUTHORIZED,"Неправильное имя пользователя или пароль");
+            case ValidationAuthException badReq -> generateProblemDetail(BAD_REQUEST, exception.getMessage());
+            case AuthenticationServiceException notAll -> generateProblemDetail(METHOD_NOT_ALLOWED, exception.getMessage());
             default -> generateProblemDetail(INTERNAL_SERVER_ERROR, exception.getMessage());
         };
     }

@@ -3,9 +3,9 @@ spring:
     name: cloud-storage
 
   datasource:
-    url: jdbc:postgresql://192.168.0.125:3434/postgres
-    username: postgres
-    password: 1337
+    url: jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -18,8 +18,8 @@ spring:
 
   data:
     redis:
-      host: 192.168.0.125
-      port: 6379
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
 
   servlet:
     multipart:
@@ -33,9 +33,9 @@ spring:
 
 minio:
   bucket-name: user-files
-  endpoint: http://192.168.0.125:9000
-  user: user
-  password: 12345678
+  endpoint: ${MINIO_URL}
+  user: ${MINIO_ROOT_USER}
+  password: ${MINIO_ROOT_PASSWORD}
 
 
 #  session:

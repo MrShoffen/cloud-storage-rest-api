@@ -59,7 +59,7 @@ public class FilterSecurityConfig {
                                 .logoutUrl("/api/v1/auth/logout")
                                 .invalidateHttpSession(true)
                                 .logoutSuccessHandler(
-                                        (_, response, _) ->
+                                        (req, response, auth) ->
                                                 response.setStatus(HttpStatus.NO_CONTENT.value())
                                 )
                 )
