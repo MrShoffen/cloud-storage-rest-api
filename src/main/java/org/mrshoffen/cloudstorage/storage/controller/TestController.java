@@ -1,20 +1,15 @@
 package org.mrshoffen.cloudstorage.storage.controller;
 
-import io.minio.GetObjectArgs;
 import io.minio.MinioClient;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.dto.DownloadStorageObjectDto;
 import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
 import org.mrshoffen.cloudstorage.storage.dto.request.CopyMoveRequest;
-import org.mrshoffen.cloudstorage.storage.dto.response.FileResponseDto;
-import org.mrshoffen.cloudstorage.storage.dto.response.FolderFileResponseDto;
 import org.mrshoffen.cloudstorage.storage.dto.response.ObjectManageResponse;
-import org.mrshoffen.cloudstorage.storage.service.MinioService;
+import org.mrshoffen.cloudstorage.storage.service.UserStorageService;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -22,14 +17,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
-
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @RestController
 @RequestMapping("/api/v1/files") //todo rename endpoint
@@ -41,7 +32,7 @@ public class TestController {
 
     private final MinioClient minioClient;
 
-    private final MinioService minioService;
+    private final UserStorageService userStorageService;
 
     @SneakyThrows
     @GetMapping
@@ -51,9 +42,9 @@ public class TestController {
 
         List<StorageObject> foldersAndFiles;
         if (objectName.isBlank()) {
-            foldersAndFiles = minioService.usersRootFolderContent(user.getId());
+            foldersAndFiles = userStorageService.rootStorageObjects(user.getId());
         } else {
-            foldersAndFiles = minioService.userFolderItems(user.getId(), objectName);
+            foldersAndFiles = userStorageService.storageObjectsFromPath(user.getId(), objectName);
         }
         return ResponseEntity.ok(foldersAndFiles);
     }
@@ -64,7 +55,7 @@ public class TestController {
     public ResponseEntity<Resource> download(@AuthenticationPrincipal(expression = "getUser") User user,
                                              @RequestParam(value = "object") String objectPath) {
 
-        DownloadStorageObjectDto resource = minioService.downloadUserItems(user.getId(), objectPath);
+        DownloadStorageObjectDto resource = userStorageService.downloadUserItems(user.getId(), objectPath);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getNameForSave() + "\"");
@@ -86,7 +77,7 @@ public class TestController {
     @PostMapping("/copy")
     public ResponseEntity<ObjectManageResponse> copyObject(@AuthenticationPrincipal(expression = "getUser") User user,
                                                            @RequestBody CopyMoveRequest copyDto) {
-        minioService.copyUserItems(user.getId(), copyDto);
+        userStorageService.copyUserItems(user.getId(), copyDto);
 
         return ResponseEntity
                 .created(
@@ -105,7 +96,7 @@ public class TestController {
     @PutMapping("/move")
     public ResponseEntity<ObjectManageResponse> moveObject(@AuthenticationPrincipal(expression = "getUser") User user,
                                                            @RequestBody CopyMoveRequest moveDto) {
-        minioService.moveUserItems(user.getId(), moveDto);
+        userStorageService.moveUserItems(user.getId(), moveDto);
 
         return ResponseEntity
                 .ok()
@@ -121,7 +112,7 @@ public class TestController {
     public ResponseEntity<ObjectManageResponse> deleteObject(@AuthenticationPrincipal(expression = "getUser") User user,
                                                              @RequestParam(value = "object") String objectName) {
 
-        minioService.deleteUserItems(user.getId(), objectName);
+        userStorageService.deleteUserItems(user.getId(), objectName);
         return ResponseEntity
                 .ok()
                 .body(

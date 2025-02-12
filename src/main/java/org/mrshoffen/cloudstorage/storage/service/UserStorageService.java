@@ -9,6 +9,9 @@ import org.mrshoffen.cloudstorage.storage.dto.StorageObjectDto;
 import org.mrshoffen.cloudstorage.storage.dto.request.CopyMoveRequest;
 import org.mrshoffen.cloudstorage.storage.mapper.FolderFileMapper;
 import org.mrshoffen.cloudstorage.storage.repository.MinioRepository;
+import org.mrshoffen.cloudstorage.storage.repository.StorageObjectFactory;
+import org.mrshoffen.cloudstorage.storage.repository.minio.MinioFileService;
+import org.mrshoffen.cloudstorage.storage.repository.minio.MinioFolderService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 
@@ -16,25 +19,32 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class MinioService {
+public class UserStorageService {
 
     private final MinioRepository minioRepository;
 
     private final FolderFileMapper mapper;
 
+    private final MinioFolderService minioFolderService;
+
+    private final MinioFileService minioFileService;
+
+    private final StorageObjectFactory factory;
+
 
     @SneakyThrows
-    public List<StorageObject> userFolderItems(Long userId, String folderPath) {
+    public List<StorageObject> storageObjectsFromPath(Long userId, String folderPath) {
         String userRootFolder = userId.toString() + "/";
         String fullPathToFolder = userRootFolder + folderPath;
 
-        List<StorageObject> objects = minioRepository.getFolderItems(fullPathToFolder);
+        List<StorageObject> objects =factory.getService(fullPathToFolder)
+                        .findStorageObjectsWithPrefix(fullPathToFolder);
 
         return objects;
     }
 
-    public List<StorageObject> usersRootFolderContent(Long userId) {
-        return userFolderItems(userId, "");
+    public List<StorageObject> rootStorageObjects(Long userId) {
+        return storageObjectsFromPath(userId, "");
     }
 
 
@@ -43,6 +53,7 @@ public class MinioService {
         String fullObjectPath = userRootFolder + objectPath;
 
         StorageObjectDto storageObject;
+
 
         //todo create dto
         if (isFolderPath(fullObjectPath)) {
@@ -64,14 +75,8 @@ public class MinioService {
         String fullSourcePath = userRootFolder + copyDto.sourcePath();
         String fullTargetPath = userRootFolder + copyDto.targetPath();
 
-
-        if (isFolderPath(fullTargetPath)) {
-            minioRepository.copyDirectory(fullTargetPath, fullSourcePath);
-        } else {
-            minioRepository.copyFile(fullTargetPath, fullSourcePath);
-        }
-
-
+        factory.getService(fullSourcePath)
+                .copyStorageObject(fullSourcePath, fullTargetPath);
     }
 
 
@@ -80,11 +85,9 @@ public class MinioService {
         String userRootFolder = userId.toString() + "/";
         String fullDeletePath = userRootFolder + deletePath;
 
-        if (isFolderPath(fullDeletePath)) {
-            minioRepository.deleteDirectory(fullDeletePath);
-        } else {
-            minioRepository.deleteFile(fullDeletePath);
-        }
+        factory.getService(fullDeletePath)
+                .deleteStorageObject(fullDeletePath);
+
     }
 
     @SneakyThrows
@@ -93,14 +96,8 @@ public class MinioService {
         String fullSourcePath = userRootFolder + copyDto.sourcePath();
         String fullTargetPath = userRootFolder + copyDto.targetPath();
 
-
-        if (isFolderPath(fullTargetPath)) {
-            minioRepository.copyDirectory(fullTargetPath, fullSourcePath);
-            minioRepository.deleteDirectory(fullSourcePath);
-        } else {
-            minioRepository.copyFile(fullTargetPath, fullSourcePath);
-            minioRepository.deleteFile(fullSourcePath);
-        }
+        factory.getService(fullSourcePath)
+                .moveStorageObject(fullSourcePath, fullTargetPath);
     }
 
 
