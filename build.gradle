@@ -57,6 +57,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+
 bootJar {
     archiveFileName = 'cloud-rest-api.jar'
 }
