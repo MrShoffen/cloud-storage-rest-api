@@ -1,19 +1,17 @@
 package org.mrshoffen.cloudstorage.storage.service;
 
 
-import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.mrshoffen.cloudstorage.storage.dto.DownloadStorageObjectDto;
+import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
+import org.mrshoffen.cloudstorage.storage.dto.StorageObjectDto;
 import org.mrshoffen.cloudstorage.storage.dto.request.CopyMoveRequest;
-import org.mrshoffen.cloudstorage.storage.dto.response.FolderFileResponseDto;
-import org.mrshoffen.cloudstorage.storage.exception.ConflictFileNameException;
 import org.mrshoffen.cloudstorage.storage.mapper.FolderFileMapper;
 import org.mrshoffen.cloudstorage.storage.repository.MinioRepository;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
-import java.io.InputStream;
 import java.util.List;
 
 @Service
@@ -26,37 +24,38 @@ public class MinioService {
 
 
     @SneakyThrows
-    public List<FolderFileResponseDto> userFolderItems(Long userId, String folderPath) {
+    public List<StorageObject> userFolderItems(Long userId, String folderPath) {
         String userRootFolder = userId.toString() + "/";
         String fullPathToFolder = userRootFolder + folderPath;
 
-        List<Item> objects = minioRepository.getFolderItems(fullPathToFolder);
+        List<StorageObject> objects = minioRepository.getFolderItems(fullPathToFolder);
 
-        List<FolderFileResponseDto> filesAndFolders = objects.stream()
-                .map(mapper::toDto)
-                .toList();
-
-        return filesAndFolders.stream()
-                .toList();
+        return objects;
     }
 
-    public List<FolderFileResponseDto> usersRootFolderContent(Long userId) {
+    public List<StorageObject> usersRootFolderContent(Long userId) {
         return userFolderItems(userId, "");
     }
 
 
-    public Resource downloadUserItems(Long userId, String objectPath) {
+    public DownloadStorageObjectDto downloadUserItems(Long userId, String objectPath) {
         String userRootFolder = userId.toString() + "/";
         String fullObjectPath = userRootFolder + objectPath;
 
-        InputStream stream;
+        StorageObjectDto storageObject;
 
+        //todo create dto
         if (isFolderPath(fullObjectPath)) {
-            stream = minioRepository.downloadFolder(fullObjectPath);
+            storageObject = minioRepository.downloadFolder(fullObjectPath);
         } else {
-            stream = minioRepository.downloadFile(fullObjectPath);
+            storageObject = minioRepository.downloadFile(fullObjectPath);
         }
-        return new InputStreamResource(stream);
+
+        return DownloadStorageObjectDto.builder()
+                .nameForSave(storageObject.getName())
+                .size(storageObject.getSize())
+                .downloadResource(new InputStreamResource(storageObject.getInputStream()))
+                .build();
     }
 
 

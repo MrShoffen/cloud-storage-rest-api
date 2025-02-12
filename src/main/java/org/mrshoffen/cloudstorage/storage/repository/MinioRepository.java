@@ -1,23 +1,23 @@
 package org.mrshoffen.cloudstorage.storage.repository;
 
 import io.minio.*;
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.MinioException;
+import io.minio.errors.*;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.catalina.connector.Response;
+import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
+import org.mrshoffen.cloudstorage.storage.dto.StorageObjectDto;
 import org.mrshoffen.cloudstorage.storage.exception.ConflictFileNameException;
 import org.mrshoffen.cloudstorage.storage.exception.FileNotFoundException;
 import org.mrshoffen.cloudstorage.storage.exception.MinioStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.stream.StreamSupport;
 import java.util.zip.ZipEntry;
@@ -32,9 +32,8 @@ public class MinioRepository {
 
     private final MinioClient minioClient;
 
+    @SneakyThrows
     public void deleteDirectory(String folderDeletePath) {
-        checkFolderExistsConflict(folderDeletePath);
-
         List<DeleteObject> listForDelete = getFilesWithPrefix(folderDeletePath, true)
                 .stream()
                 .map(Item::objectName)
@@ -42,11 +41,13 @@ public class MinioRepository {
                 .toList();
 
         minioClient.removeObjects(
-                RemoveObjectsArgs.builder()
-                        .bucket(bucket)
-                        .objects(listForDelete)
-                        .build()
-        );
+                        RemoveObjectsArgs.builder()
+                                .bucket(bucket)
+                                .objects(listForDelete)
+                                .build()
+                )
+                .forEach(del -> {
+                });
     }
 
 
@@ -63,14 +64,17 @@ public class MinioRepository {
         );
     }
 
-    public InputStream downloadFile(String fullFilePath) {
+    public StorageObjectDto downloadFile(String fullFilePath) {
         try {
-            return minioClient.getObject(
-                    GetObjectArgs.builder()
-                            .bucket(bucket)
-                            .object(fullFilePath)
-                            .build()
-            );
+            InputStream stream = getFile(fullFilePath);
+
+            StatObjectResponse fileStats = fileStats(fullFilePath);
+
+            return StorageObjectDto.builder()
+                    .inputStream(stream)
+                    .size(fileStats.size())
+                    .name(extractSimpleName(fullFilePath))
+                    .build();
 
         } catch (ErrorResponseException e) {
             if (e.response().code() == Response.SC_NOT_FOUND) {
@@ -82,35 +86,79 @@ public class MinioRepository {
         }
     }
 
+    private InputStream getFile(String fullFilePath) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
+        return minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(fullFilePath)
+                        .build()
+        );
+    }
+
+    private long folderSize(String folderPath) {
+
+        return getFilesWithPrefix(folderPath, true)
+                .stream()
+                .map(Item::size)
+                .reduce(0L, Long::sum);
+
+    }
+
 
     @SneakyThrows
-    public InputStream downloadFolder(String folderPath) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
-            List<String> objectNames = getFilesWithPrefix(folderPath, true).stream()
-                    .map(Item::objectName).toList();
+    public StorageObjectDto downloadFolder(String folderPath) {
+        try {
+            PipedInputStream pipedInputStream = new PipedInputStream();
+            PipedOutputStream pipedOutputStream = new PipedOutputStream(pipedInputStream);
 
-            for (String objectName : objectNames) {
-                try (InputStream inputStream = downloadFile(objectName)) {
-                    // Создаем запись в ZIP-архиве
-                    ZipEntry zipEntry = new ZipEntry(objectName.replace(folderPath, ""));
-                    zipOut.putNextEntry(zipEntry);
+            new Thread(() -> {
+                try (ZipOutputStream zipOut = new ZipOutputStream(new BufferedOutputStream(pipedOutputStream, 8192))) {
+                    List<String> objectNames = getFilesWithPrefix(folderPath, true).stream()
+                            .map(Item::objectName).toList();
 
-                    // Копируем данные из потока в ZIP
-                    byte[] buffer = new byte[1024];
-                    int len;
-                    while ((len = inputStream.read(buffer)) > 0) {
-                        zipOut.write(buffer, 0, len);
+                    long totalBytesWritten = 0;
+                    for (String objectName : objectNames) {
+                        try (InputStream inputStream = getFile(objectName)) {
+                            ZipEntry zipEntry = new ZipEntry(objectName.replace(folderPath, ""));
+                            zipOut.putNextEntry(zipEntry);
+
+                            byte[] buffer = new byte[8192];
+                            int len;
+                            while ((len = inputStream.read(buffer)) > 0) {
+                                zipOut.write(buffer, 0, len);
+                                totalBytesWritten += len;
+                                // Логирование прогресса (опционально)
+                                System.out.println("Записано байт: " + totalBytesWritten);
+                            }
+
+                            zipOut.closeEntry();
+                        } catch (Exception e) {
+                            throw new RuntimeException("Ошибка при добавлении файла в архив: " + objectName, e);
+                        }
                     }
-
-                    zipOut.closeEntry();
-                } catch (Exception e) {
-                    throw new RuntimeException("Ошибка при добавлении файла в архив: " + objectName, e);
+                } catch (IOException e) {
+                    throw new RuntimeException("Ошибка при создании архива", e);
+                } finally {
+                    try {
+                        pipedOutputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
+            }).start();
+
+            String zipName = extractSimpleName(folderPath).replace("/", ".zip");
+            return StorageObjectDto.builder()
+                    .inputStream(pipedInputStream)
+                    .size(folderSize(folderPath))
+                    .name(zipName)
+                    .build();
+
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка при создании потоков", e);
         }
 
-        return new ByteArrayInputStream(baos.toByteArray());
+
     }
 
     @SneakyThrows
@@ -158,15 +206,19 @@ public class MinioRepository {
     @SneakyThrows
     public boolean fileExists(String fullFilePath) {
         try {
-            minioClient.statObject(
-                    StatObjectArgs.builder()
-                            .bucket(bucket)
-                            .object(fullFilePath)
-                            .build());
+            fileStats(fullFilePath);
             return true;
         } catch (MinioException e) {
             return false;
         }
+    }
+
+    private StatObjectResponse fileStats(String fullFilePath) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
+        return minioClient.statObject(
+                StatObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(fullFilePath)
+                        .build());
     }
 
     public boolean folderExists(String fullFolderPath) {
@@ -176,8 +228,8 @@ public class MinioRepository {
     }
 
 
-    public List<Item> getFolderItems(String fullPathToFolder) {
-        return getFilesWithPrefix(fullPathToFolder, false);
+    public List<StorageObject> getFolderItems(String fullPathToFolder) {
+        return getStorageObjectsWithPrefix(fullPathToFolder, false);
     }
 
     private List<Item> getFilesWithPrefix(String prefix, boolean recursive) {
@@ -192,13 +244,54 @@ public class MinioRepository {
         return StreamSupport.stream(objects.spliterator(), false)
                 .map(result -> {
                             try {
-                                return result.get();
+                                Item item = result.get();
+
+                                return item;
                             } catch (Exception e) {
                                 throw new RuntimeException("Error occurred while getting items from folder " + prefix, e);
                             }
                         }
                 )
                 .toList();
+    }
+
+    private List<StorageObject> getStorageObjectsWithPrefix(String prefix, boolean recursive) {
+        Iterable<Result<Item>> objects = minioClient.listObjects(
+                ListObjectsArgs.builder()
+                        .bucket(bucket)
+                        .recursive(recursive)
+                        .prefix(prefix)
+                        .build()
+        );
+
+        return StreamSupport.stream(objects.spliterator(), false)
+                .map(result -> {
+                            try {
+                                Item item = result.get();
+
+
+                                String absolutePath = item.objectName();
+
+                                int lastSlashIndex = absolutePath.lastIndexOf('/', absolutePath.length() - 2);
+                                String simpleName = absolutePath.substring(lastSlashIndex + 1);
+
+                                int firstSlashIndex = absolutePath.indexOf('/');
+                                String relativePath = absolutePath.substring(firstSlashIndex + 1);
+
+
+                                return StorageObject.builder()
+                                        .name(simpleName)
+                                        .path(relativePath)
+                                        .isFolder(item.isDir())
+                                        .size(item.isDir() ? folderSize(item.objectName()) : item.size())
+                                        .lastModified(item.lastModified())
+                                        .build();
+                            } catch (Exception e) {
+                                throw new RuntimeException("Error occurred while getting items from folder " + prefix, e);
+                            }
+                        }
+                ).toList();
+
     }
 
     private void checkFolderConflict(String fullFolderPath) {
@@ -216,7 +309,7 @@ public class MinioRepository {
         }
     }
 
-    static String extractSimpleName(String fullPath) {
+    public static String extractSimpleName(String fullPath) {
         int lastSlashIndex = fullPath.lastIndexOf('/', fullPath.length() - 2);
         return fullPath.substring(lastSlashIndex + 1);
     }

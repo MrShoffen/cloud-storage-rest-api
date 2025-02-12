@@ -5,6 +5,8 @@ import io.minio.MinioClient;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.mrshoffen.cloudstorage.storage.dto.DownloadStorageObjectDto;
+import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
 import org.mrshoffen.cloudstorage.storage.dto.request.CopyMoveRequest;
 import org.mrshoffen.cloudstorage.storage.dto.response.FileResponseDto;
 import org.mrshoffen.cloudstorage.storage.dto.response.FolderFileResponseDto;
@@ -43,11 +45,11 @@ public class TestController {
 
     @SneakyThrows
     @GetMapping
-    public ResponseEntity<List<FolderFileResponseDto>> test(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                            @RequestParam(value = "object") String objectName) {
+    public ResponseEntity<List<StorageObject>> test(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                    @RequestParam(value = "object") String objectName) {
 //todo add validation
 
-        List<FolderFileResponseDto> foldersAndFiles;
+        List<StorageObject> foldersAndFiles;
         if (objectName.isBlank()) {
             foldersAndFiles = minioService.usersRootFolderContent(user.getId());
         } else {
@@ -62,23 +64,16 @@ public class TestController {
     public ResponseEntity<Resource> download(@AuthenticationPrincipal(expression = "getUser") User user,
                                              @RequestParam(value = "object") String objectPath) {
 
-
-        List<FolderFileResponseDto> folderFileResponseDtos = minioService.userFolderItems(user.getId(), objectPath);
-
-        Long size = ((FileResponseDto) folderFileResponseDtos.get(0)).getSize();
-
-        Resource resource = minioService.downloadUserItems(user.getId(), objectPath);
+        DownloadStorageObjectDto resource = minioService.downloadUserItems(user.getId(), objectPath);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + objectPath + "\"");
-        headers.setContentLength(size);
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getNameForSave() + "\"");
+//        headers.setContentLength(resource.getSize());
 
         return ResponseEntity.ok()
                 .headers(headers)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(resource);
-
-
+                .body(resource.getDownloadResource());
     }
 
     @PostMapping

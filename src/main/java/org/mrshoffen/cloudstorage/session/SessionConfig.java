@@ -12,7 +12,7 @@ import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisIndexedHttpSession;
 
 @Configuration
-@EnableRedisIndexedHttpSession
+@EnableRedisIndexedHttpSession(maxInactiveIntervalInSeconds = 60*60*24)
 public class SessionConfig implements BeanClassLoaderAware {
 
     private ClassLoader loader;
@@ -38,7 +38,4 @@ public class SessionConfig implements BeanClassLoaderAware {
     public void setBeanClassLoader(ClassLoader classLoader) {
         this.loader = classLoader;
     }
-
-
-
 }
