@@ -11,9 +11,6 @@ public class MinioConfig {
     @Value("${minio.endpoint}")
     private String endpoint;
 
-    @Value("${minio.bucket-name}")
-    private String bucketName;
-
     @Value("${minio.user}")
     private String user;
 

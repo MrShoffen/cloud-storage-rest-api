@@ -1,10 +1,7 @@
-package org.mrshoffen.cloudstorage.storage.repository;
+package org.mrshoffen.cloudstorage.storage.minio;
 
 
 import lombok.RequiredArgsConstructor;
-import org.mrshoffen.cloudstorage.storage.repository.minio.MinioFileOperations;
-import org.mrshoffen.cloudstorage.storage.repository.minio.MinioFolderOperations;
-import org.mrshoffen.cloudstorage.storage.repository.minio.MinioOperations;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,7 +12,7 @@ public class MinioOperationResolver {
     private final MinioFileOperations minioFileService;
 
 
-    public MinioOperations resolveOperation(String sourcePath) {
+    public MinioOperations resolve(String sourcePath) {
         if (isFolderPath(sourcePath)) {
             return minioFolderService;
         } else {

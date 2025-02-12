@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.storage.dto.request;
+package org.mrshoffen.cloudstorage.storage.model.dto.request;
 
 public record CopyMoveRequest(
         //todo add validation (both must be either files or folders

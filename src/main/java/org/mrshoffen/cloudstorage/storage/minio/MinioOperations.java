@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.storage.repository.minio;
+package org.mrshoffen.cloudstorage.storage.minio;
 
 import io.minio.GetObjectArgs;
 import io.minio.ListObjectsArgs;
@@ -7,10 +7,8 @@ import io.minio.Result;
 import io.minio.errors.*;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
-import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
-import org.mrshoffen.cloudstorage.storage.dto.StorageObjectResourceDto;
-import org.mrshoffen.cloudstorage.storage.exception.ConflictFileNameException;
-import org.mrshoffen.cloudstorage.storage.exception.FileNotFoundException;
+import org.mrshoffen.cloudstorage.storage.model.StorageObject;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,9 +28,12 @@ public abstract class MinioOperations {
 
     public abstract void copyObject(String sourcePath, String targetPath);
 
-    public abstract void moveObject(String sourcePath, String targetPath);
+    public abstract StorageObjectResourceDto getObjectAsResource(String folderPath);
 
-    public abstract StorageObjectResourceDto downloadObject(String folderPath);
+    public boolean objectExists(String path) {
+        return !findItemsWithPrefix(path, false)
+                .isEmpty();
+    }
 
     public List<StorageObject> findObjectWithPrefix(String fullPathToFolder) {
         List<Item> items = findItemsWithPrefix(fullPathToFolder, false);
@@ -75,26 +76,6 @@ public abstract class MinioOperations {
 
     }
 
-    protected void ensureObjectExists(String path) {
-        if (!objectExists(path)) {
-            throw new FileNotFoundException("'%s' не существует в исходной папке"
-                    .formatted(extractSimpleName(path)));
-        }
-    }
-
-    protected void ensureObjectNotExists(String path) {
-        if (objectExists(path)) {
-            throw new ConflictFileNameException("'%s' уже существует в целевой папке"
-                    .formatted(extractSimpleName(path)));
-
-        }
-    }
-
-    private boolean objectExists(String path) {
-        return !findItemsWithPrefix(path, false)
-                .isEmpty();
-    }
-
     private Long getItemSize(Item item) {
         if (item.isDir()) {
             return findItemsWithPrefix(item.objectName(), true)
@@ -106,7 +87,7 @@ public abstract class MinioOperations {
         }
     }
 
-    protected InputStream getFile(String fullFilePath) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
+    protected InputStream getFileStream(String fullFilePath) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
         return minioClient.getObject(
                 GetObjectArgs.builder()
                         .bucket(bucket)

@@ -3,10 +3,10 @@ package org.mrshoffen.cloudstorage.storage.controller;
 import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.dto.StorageObjectResourceDto;
-import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
-import org.mrshoffen.cloudstorage.storage.dto.request.CopyMoveRequest;
-import org.mrshoffen.cloudstorage.storage.dto.response.ObjectManageResponse;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
+import org.mrshoffen.cloudstorage.storage.model.StorageObject;
+import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectOperationResponse;
 import org.mrshoffen.cloudstorage.storage.service.UserStorageService;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,9 +42,9 @@ public class TestController {
 
         List<StorageObject> foldersAndFiles;
         if (objectName.isBlank()) {
-            foldersAndFiles = userStorageService.rootStorageObjects(user.getId());
+            foldersAndFiles = userStorageService.getObjectsInRootFolder(user.getId());
         } else {
-            foldersAndFiles = userStorageService.storageObjectsFromPath(user.getId(), objectName);
+            foldersAndFiles = userStorageService.getObjectsInFolder(user.getId(), objectName);
         }
         return ResponseEntity.ok(foldersAndFiles);
     }
@@ -55,7 +55,7 @@ public class TestController {
     public ResponseEntity<Resource> download(@AuthenticationPrincipal(expression = "getUser") User user,
                                              @RequestParam(value = "object") String objectPath) {
 
-        StorageObjectResourceDto resource = userStorageService.downloadUserItems(user.getId(), objectPath);
+        StorageObjectResourceDto resource = userStorageService.downloadObject(user.getId(), objectPath);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getNameForSave() + "\"");
@@ -75,9 +75,9 @@ public class TestController {
     }
 
     @PostMapping("/copy")
-    public ResponseEntity<ObjectManageResponse> copyObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                           @RequestBody CopyMoveRequest copyDto) {
-        userStorageService.copyUserItems(user.getId(), copyDto);
+    public ResponseEntity<StorageObjectOperationResponse> copyObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                     @RequestBody CopyMoveRequest copyDto) {
+        userStorageService.copyObject(user.getId(), copyDto);
 
         return ResponseEntity
                 .created(
@@ -86,7 +86,7 @@ public class TestController {
                                 .build(Map.of("path", copyDto.targetPath()))
                 )
                 .body(
-                        ObjectManageResponse.builder()
+                        StorageObjectOperationResponse.builder()
                                 .message("Копирование успешно выполнено")
                                 .path(copyDto.targetPath())
                                 .build()
@@ -94,14 +94,14 @@ public class TestController {
     }
 
     @PutMapping("/move")
-    public ResponseEntity<ObjectManageResponse> moveObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                           @RequestBody CopyMoveRequest moveDto) {
-        userStorageService.moveUserItems(user.getId(), moveDto);
+    public ResponseEntity<StorageObjectOperationResponse> moveObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                     @RequestBody CopyMoveRequest moveDto) {
+        userStorageService.moveObject(user.getId(), moveDto);
 
         return ResponseEntity
                 .ok()
                 .body(
-                        ObjectManageResponse.builder()
+                        StorageObjectOperationResponse.builder()
                                 .message("Перемещение успешно выполнено")
                                 .path(moveDto.targetPath())
                                 .build()
@@ -109,14 +109,14 @@ public class TestController {
     }
 
     @DeleteMapping
-    public ResponseEntity<ObjectManageResponse> deleteObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                             @RequestParam(value = "object") String objectName) {
+    public ResponseEntity<StorageObjectOperationResponse> deleteObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                       @RequestParam(value = "object") String objectName) {
 
-        userStorageService.deleteUserItems(user.getId(), objectName);
+        userStorageService.deleteObject(user.getId(), objectName);
         return ResponseEntity
                 .ok()
                 .body(
-                        ObjectManageResponse.builder()
+                        StorageObjectOperationResponse.builder()
                                 .message("Удаление успешно выполнено")
                                 .build()
                 );

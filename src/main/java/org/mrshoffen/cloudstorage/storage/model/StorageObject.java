@@ -1,11 +1,10 @@
-package org.mrshoffen.cloudstorage.storage.dto;
+package org.mrshoffen.cloudstorage.storage.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.InputStream;
 import java.time.ZonedDateTime;
 
 

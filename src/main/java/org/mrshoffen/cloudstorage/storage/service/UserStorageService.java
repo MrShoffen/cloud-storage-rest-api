@@ -3,11 +3,10 @@ package org.mrshoffen.cloudstorage.storage.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.dto.StorageObjectResourceDto;
-import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
-import org.mrshoffen.cloudstorage.storage.dto.StorageObjectDto;
-import org.mrshoffen.cloudstorage.storage.dto.request.CopyMoveRequest;
-import org.mrshoffen.cloudstorage.storage.repository.MinioOperationResolver;
+import org.mrshoffen.cloudstorage.storage.model.StorageObject;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
+import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
+import org.mrshoffen.cloudstorage.storage.repository.StorageObjectRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,70 +15,53 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserStorageService {
 
-    private final MinioOperationResolver factory;
-
+   private final StorageObjectRepository repository;
 
     @SneakyThrows
-    public List<StorageObject> storageObjectsFromPath(Long userId, String folderPath) {
+    public List<StorageObject> getObjectsInFolder(Long userId, String folderPath) {
         String userRootFolder = userId.toString() + "/";
         String fullPathToFolder = userRootFolder + folderPath;
 
-        List<StorageObject> objects = factory.resolveOperation(fullPathToFolder)
-                .findObjectWithPrefix(fullPathToFolder);
-
-        return objects;
+        return repository.find(fullPathToFolder);
     }
 
-    public List<StorageObject> rootStorageObjects(Long userId) {
-        return storageObjectsFromPath(userId, "");
+    public List<StorageObject> getObjectsInRootFolder(Long userId) {
+        return getObjectsInFolder(userId, "");
     }
 
 
-    public StorageObjectResourceDto downloadUserItems(Long userId, String objectPath) {
+    public StorageObjectResourceDto downloadObject(Long userId, String objectPath) {
         String userRootFolder = userId.toString() + "/";
         String fullObjectPath = userRootFolder + objectPath;
 
-        StorageObjectDto storageObject;
-
-
-        return factory.resolveOperation(fullObjectPath)
-                .downloadObject(fullObjectPath);
+        return repository.download(fullObjectPath);
     }
 
 
-    public void copyUserItems(Long userId, CopyMoveRequest copyDto) {
+    public void copyObject(Long userId, CopyMoveRequest copyDto) {
         String userRootFolder = userId.toString() + "/";
         String fullSourcePath = userRootFolder + copyDto.sourcePath();
         String fullTargetPath = userRootFolder + copyDto.targetPath();
 
-        factory.resolveOperation(fullSourcePath)
-                .copyObject(fullSourcePath, fullTargetPath);
+        repository.copy(fullSourcePath, fullTargetPath);
     }
 
 
     @SneakyThrows
-    public void deleteUserItems(Long userId, String deletePath) {
+    public void deleteObject(Long userId, String deletePath) {
         String userRootFolder = userId.toString() + "/";
         String fullDeletePath = userRootFolder + deletePath;
 
-        factory.resolveOperation(fullDeletePath)
-                .deleteObjectByPath(fullDeletePath);
-
+        repository.delete(fullDeletePath);
     }
 
     @SneakyThrows
-    public void moveUserItems(Long userId, CopyMoveRequest copyDto) {
+    public void moveObject(Long userId, CopyMoveRequest copyDto) {
         String userRootFolder = userId.toString() + "/";
         String fullSourcePath = userRootFolder + copyDto.sourcePath();
         String fullTargetPath = userRootFolder + copyDto.targetPath();
 
-        factory.resolveOperation(fullSourcePath)
-                .moveObject(fullSourcePath, fullTargetPath);
-    }
-
-
-    static boolean isFolderPath(String fullTargetPath) {
-        return fullTargetPath.endsWith("/");
+        repository.move(fullSourcePath, fullTargetPath);
     }
 
 }

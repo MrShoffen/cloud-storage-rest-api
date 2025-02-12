@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.storage.dto.response;
+package org.mrshoffen.cloudstorage.storage.model.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class ObjectManageResponse {
+public class StorageObjectOperationResponse {
     private String path;
     private String message;
 }

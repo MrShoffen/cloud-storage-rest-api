@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.storage.dto;
+package org.mrshoffen.cloudstorage.storage.model.dto.response;
 
 import lombok.Builder;
 import lombok.Data;

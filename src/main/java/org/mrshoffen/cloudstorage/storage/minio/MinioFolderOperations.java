@@ -1,28 +1,24 @@
-package org.mrshoffen.cloudstorage.storage.repository.minio;
+package org.mrshoffen.cloudstorage.storage.minio;
 
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
 import io.minio.MinioClient;
 import io.minio.RemoveObjectsArgs;
-import io.minio.errors.*;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.dto.StorageObjectDto;
-import org.mrshoffen.cloudstorage.storage.dto.StorageObjectResourceDto;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-@Service
+@Component
 public class MinioFolderOperations extends MinioOperations {
 
     @Autowired
@@ -34,33 +30,49 @@ public class MinioFolderOperations extends MinioOperations {
 
     @Override
     public void deleteObjectByPath(String path) {
-        ensureObjectExists(path);
-
         List<Item> allInnerItems = findItemsWithPrefix(path, true);
-        delete(allInnerItems);
+
+        List<DeleteObject> listForDelete = allInnerItems.stream()
+                .map(Item::objectName)
+                .map(DeleteObject::new)
+                .toList();
+
+        minioClient.removeObjects(
+                        RemoveObjectsArgs.builder()
+                                .bucket(bucket)
+                                .objects(listForDelete)
+                                .build()
+                )
+                .forEach(del -> {
+                });
     }
 
     @Override
     @SneakyThrows
     public void copyObject(String sourcePath, String targetPath) {
-        ensureObjectExists(sourcePath);
-        ensureObjectNotExists(targetPath);
+        List<Item> allInnerSourceItems = findItemsWithPrefix(sourcePath, true);
 
-        innerCopy(sourcePath, targetPath);
+        for (Item item : allInnerSourceItems) {
+            String innerObjectSourcePath = item.objectName();
+            String innerObjectTargetPath = innerObjectSourcePath.replaceFirst(sourcePath, targetPath);
+            minioClient.copyObject(
+                    CopyObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(innerObjectTargetPath)
+                            .source(
+                                    CopySource.builder()
+                                            .bucket(bucket)
+                                            .object(innerObjectSourcePath)
+                                            .build()
+                            )
+                            .build()
+            );
+        }
     }
 
-    @Override
-    @SneakyThrows
-    public void moveObject(String sourcePath, String targetPath) {
-        ensureObjectExists(sourcePath);
-        ensureObjectNotExists(targetPath);
-
-        List<Item> allInnerSourceItems = innerCopy(sourcePath, targetPath);
-        delete(allInnerSourceItems);
-    }
 
     @Override
-    public StorageObjectResourceDto downloadObject(String downloadPath) {
+    public StorageObjectResourceDto getObjectAsResource(String downloadPath) {
         try {
             PipedInputStream pipedInputStream = new PipedInputStream();
             PipedOutputStream pipedOutputStream = new PipedOutputStream(pipedInputStream);
@@ -72,7 +84,7 @@ public class MinioFolderOperations extends MinioOperations {
 
                     long totalBytesWritten = 0;
                     for (String objectName : objectNames) {
-                        try (InputStream inputStream = getFile(objectName)) {
+                        try (InputStream inputStream = getFileStream(objectName)) {
                             ZipEntry zipEntry = new ZipEntry(objectName.replace(downloadPath, ""));
                             zipOut.putNextEntry(zipEntry);
 
@@ -110,46 +122,5 @@ public class MinioFolderOperations extends MinioOperations {
         } catch (IOException e) {
             throw new RuntimeException("Ошибка при создании потоков", e);
         }
-    }
-
-
-    private List<Item> innerCopy(String sourcePath, String targetPath) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
-        List<Item> allInnerSourceItems = findItemsWithPrefix(sourcePath, true);
-
-        for (Item item : allInnerSourceItems) {
-            String innerObjectSourcePath = item.objectName();
-            String innerObjectTargetPath = innerObjectSourcePath.replaceFirst(sourcePath, targetPath);
-            minioClient.copyObject(
-                    CopyObjectArgs.builder()
-                            .bucket(bucket)
-                            .object(innerObjectTargetPath)
-                            .source(
-                                    CopySource.builder()
-                                            .bucket(bucket)
-                                            .object(innerObjectSourcePath)
-                                            .build()
-                            )
-                            .build()
-            );
-        }
-
-        return allInnerSourceItems;
-    }
-
-    private void delete(List<Item> itemList) {
-
-        List<DeleteObject> listForDelete = itemList.stream()
-                .map(Item::objectName)
-                .map(DeleteObject::new)
-                .toList();
-
-        minioClient.removeObjects(
-                        RemoveObjectsArgs.builder()
-                                .bucket(bucket)
-                                .objects(listForDelete)
-                                .build()
-                )
-                .forEach(del -> {
-                });
     }
 }
