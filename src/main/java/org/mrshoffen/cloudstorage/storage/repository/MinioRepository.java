@@ -1,7 +1,8 @@
 package org.mrshoffen.cloudstorage.storage.repository;
 
 import io.minio.*;
-import io.minio.errors.*;
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.MinioException;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
@@ -13,18 +14,23 @@ import org.mrshoffen.cloudstorage.storage.exception.MinioStorageException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.stream.StreamSupport;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 @Repository
 @RequiredArgsConstructor
 public class MinioRepository {
+
     @Value("${minio.bucket-name}")
     private String bucket;
 
     private final MinioClient minioClient;
-
 
     public void deleteDirectory(String folderDeletePath) {
         checkFolderExistsConflict(folderDeletePath);
@@ -59,14 +65,13 @@ public class MinioRepository {
 
     public InputStream downloadFile(String fullFilePath) {
         try {
-            InputStream stream = minioClient.getObject(
+            return minioClient.getObject(
                     GetObjectArgs.builder()
                             .bucket(bucket)
                             .object(fullFilePath)
                             .build()
             );
 
-            return stream;
         } catch (ErrorResponseException e) {
             if (e.response().code() == Response.SC_NOT_FOUND) {
                 throw new FileNotFoundException("'%s' не существует в исходной папке".formatted(extractSimpleName(fullFilePath)), e);
@@ -75,6 +80,37 @@ public class MinioRepository {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+
+    @SneakyThrows
+    public InputStream downloadFolder(String folderPath) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (ZipOutputStream zipOut = new ZipOutputStream(baos)) {
+            List<String> objectNames = getFilesWithPrefix(folderPath, true).stream()
+                    .map(Item::objectName).toList();
+
+            for (String objectName : objectNames) {
+                try (InputStream inputStream = downloadFile(objectName)) {
+                    // Создаем запись в ZIP-архиве
+                    ZipEntry zipEntry = new ZipEntry(objectName.replace(folderPath, ""));
+                    zipOut.putNextEntry(zipEntry);
+
+                    // Копируем данные из потока в ZIP
+                    byte[] buffer = new byte[1024];
+                    int len;
+                    while ((len = inputStream.read(buffer)) > 0) {
+                        zipOut.write(buffer, 0, len);
+                    }
+
+                    zipOut.closeEntry();
+                } catch (Exception e) {
+                    throw new RuntimeException("Ошибка при добавлении файла в архив: " + objectName, e);
+                }
+            }
+        }
+
+        return new ByteArrayInputStream(baos.toByteArray());
     }
 
     @SneakyThrows

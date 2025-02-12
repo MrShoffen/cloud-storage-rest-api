@@ -9,6 +9,7 @@ import org.mrshoffen.cloudstorage.storage.dto.response.FolderFileResponseDto;
 import org.mrshoffen.cloudstorage.storage.exception.ConflictFileNameException;
 import org.mrshoffen.cloudstorage.storage.mapper.FolderFileMapper;
 import org.mrshoffen.cloudstorage.storage.repository.MinioRepository;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 
@@ -48,12 +49,14 @@ public class MinioService {
         String userRootFolder = userId.toString() + "/";
         String fullObjectPath = userRootFolder + objectPath;
 
-        if (isFolderPath(fullObjectPath)) {
+        InputStream stream;
 
+        if (isFolderPath(fullObjectPath)) {
+            stream = minioRepository.downloadFolder(fullObjectPath);
         } else {
-            minioRepository.downloadFile(fullObjectPath);
+            stream = minioRepository.downloadFile(fullObjectPath);
         }
-        return null;
+        return new InputStreamResource(stream);
     }
 
 
@@ -63,11 +66,11 @@ public class MinioService {
         String fullTargetPath = userRootFolder + copyDto.targetPath();
 
 
-            if (isFolderPath(fullTargetPath)) {
-                minioRepository.copyDirectory(fullTargetPath, fullSourcePath);
-            } else {
-                minioRepository.copyFile(fullTargetPath, fullSourcePath);
-            }
+        if (isFolderPath(fullTargetPath)) {
+            minioRepository.copyDirectory(fullTargetPath, fullSourcePath);
+        } else {
+            minioRepository.copyFile(fullTargetPath, fullSourcePath);
+        }
 
 
     }
@@ -100,7 +103,6 @@ public class MinioService {
             minioRepository.deleteFile(fullSourcePath);
         }
     }
-
 
 
     static boolean isFolderPath(String fullTargetPath) {

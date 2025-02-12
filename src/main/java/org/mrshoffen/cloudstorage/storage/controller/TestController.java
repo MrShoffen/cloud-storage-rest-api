@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.dto.request.CopyMoveRequest;
+import org.mrshoffen.cloudstorage.storage.dto.response.FileResponseDto;
 import org.mrshoffen.cloudstorage.storage.dto.response.FolderFileResponseDto;
 import org.mrshoffen.cloudstorage.storage.dto.response.ObjectManageResponse;
 import org.mrshoffen.cloudstorage.storage.service.MinioService;
@@ -56,36 +57,27 @@ public class TestController {
     }
 
 
+    @SneakyThrows
     @GetMapping("/download")
     public ResponseEntity<Resource> download(@AuthenticationPrincipal(expression = "getUser") User user,
                                              @RequestParam(value = "object") String objectPath) {
 
 
-        minioService.downloadUserItems(user.getId(), objectPath);
-//        try {
-//
-//            String userRootFolder = user.getId().toString() + "/";
-//            String fullPath = userRootFolder + objectPath;
-//
-//            InputStream stream = minioClient.getObject(
-//                    GetObjectArgs.builder()
-//                            .bucket(bucket)
-//                            .object(fullPath)
-//                            .build()
-//            );
-//
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + objectPath + "\"");
-//
-//            return ResponseEntity.ok()
-//                    .headers(headers)
-//                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-//                    .body(new InputStreamResource(stream));
-//        } catch (Exception e) {
-//            throw new ResponseStatusException(NOT_FOUND, "File not found", e);
-//        }
+        List<FolderFileResponseDto> folderFileResponseDtos = minioService.userFolderItems(user.getId(), objectPath);
 
-        return null;
+        Long size = ((FileResponseDto) folderFileResponseDtos.get(0)).getSize();
+
+        Resource resource = minioService.downloadUserItems(user.getId(), objectPath);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + objectPath + "\"");
+        headers.setContentLength(size);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
+
 
     }
 
