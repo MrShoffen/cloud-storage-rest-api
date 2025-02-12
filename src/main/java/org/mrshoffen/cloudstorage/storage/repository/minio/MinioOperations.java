@@ -1,28 +1,40 @@
 package org.mrshoffen.cloudstorage.storage.repository.minio;
 
+import io.minio.GetObjectArgs;
 import io.minio.ListObjectsArgs;
 import io.minio.MinioClient;
 import io.minio.Result;
+import io.minio.errors.*;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
+import org.mrshoffen.cloudstorage.storage.dto.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.exception.ConflictFileNameException;
 import org.mrshoffen.cloudstorage.storage.exception.FileNotFoundException;
-import org.mrshoffen.cloudstorage.storage.repository.StorageObjectService;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.stream.StreamSupport;
 
 @RequiredArgsConstructor
-public abstract class MinioService implements StorageObjectService {
+public abstract class MinioOperations {
 
     protected final String bucket;
 
     protected final MinioClient minioClient;
 
+    public abstract void deleteObjectByPath(String path);
 
-    @Override
-    public List<StorageObject> findStorageObjectsWithPrefix(String fullPathToFolder) {
+    public abstract void copyObject(String sourcePath, String targetPath);
+
+    public abstract void moveObject(String sourcePath, String targetPath);
+
+    public abstract StorageObjectResourceDto downloadObject(String folderPath);
+
+    public List<StorageObject> findObjectWithPrefix(String fullPathToFolder) {
         List<Item> items = findItemsWithPrefix(fullPathToFolder, false);
 
         return items.stream()
@@ -94,8 +106,16 @@ public abstract class MinioService implements StorageObjectService {
         }
     }
 
+    protected InputStream getFile(String fullFilePath) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
+        return minioClient.getObject(
+                GetObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(fullFilePath)
+                        .build()
+        );
+    }
 
-    private static String extractSimpleName(String fullPath) {
+    protected static String extractSimpleName(String fullPath) {
         int lastSlashIndex = fullPath.lastIndexOf('/', fullPath.length() - 2);
         return fullPath.substring(lastSlashIndex + 1);
     }
@@ -104,4 +124,5 @@ public abstract class MinioService implements StorageObjectService {
         int firstSlashIndex = fullPath.indexOf('/');
         return fullPath.substring(firstSlashIndex + 1);
     }
-}
+
+ }

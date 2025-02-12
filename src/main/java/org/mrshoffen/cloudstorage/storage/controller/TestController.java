@@ -3,7 +3,7 @@ package org.mrshoffen.cloudstorage.storage.controller;
 import io.minio.MinioClient;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.dto.DownloadStorageObjectDto;
+import org.mrshoffen.cloudstorage.storage.dto.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
 import org.mrshoffen.cloudstorage.storage.dto.request.CopyMoveRequest;
 import org.mrshoffen.cloudstorage.storage.dto.response.ObjectManageResponse;
@@ -55,7 +55,7 @@ public class TestController {
     public ResponseEntity<Resource> download(@AuthenticationPrincipal(expression = "getUser") User user,
                                              @RequestParam(value = "object") String objectPath) {
 
-        DownloadStorageObjectDto resource = userStorageService.downloadUserItems(user.getId(), objectPath);
+        StorageObjectResourceDto resource = userStorageService.downloadUserItems(user.getId(), objectPath);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getNameForSave() + "\"");

@@ -6,10 +6,7 @@ import org.springframework.core.io.Resource;
 
 @Data
 @Builder
-public class DownloadStorageObjectDto {
-
+public class StorageObjectResourceDto {
     private Resource downloadResource;
     private String nameForSave;
-    private Long size;
-
 }

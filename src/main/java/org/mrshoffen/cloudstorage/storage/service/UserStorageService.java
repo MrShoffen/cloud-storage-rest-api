@@ -3,16 +3,11 @@ package org.mrshoffen.cloudstorage.storage.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.dto.DownloadStorageObjectDto;
+import org.mrshoffen.cloudstorage.storage.dto.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.dto.StorageObject;
 import org.mrshoffen.cloudstorage.storage.dto.StorageObjectDto;
 import org.mrshoffen.cloudstorage.storage.dto.request.CopyMoveRequest;
-import org.mrshoffen.cloudstorage.storage.mapper.FolderFileMapper;
-import org.mrshoffen.cloudstorage.storage.repository.MinioRepository;
-import org.mrshoffen.cloudstorage.storage.repository.StorageObjectFactory;
-import org.mrshoffen.cloudstorage.storage.repository.minio.MinioFileService;
-import org.mrshoffen.cloudstorage.storage.repository.minio.MinioFolderService;
-import org.springframework.core.io.InputStreamResource;
+import org.mrshoffen.cloudstorage.storage.repository.MinioOperationResolver;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,15 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserStorageService {
 
-    private final MinioRepository minioRepository;
-
-    private final FolderFileMapper mapper;
-
-    private final MinioFolderService minioFolderService;
-
-    private final MinioFileService minioFileService;
-
-    private final StorageObjectFactory factory;
+    private final MinioOperationResolver factory;
 
 
     @SneakyThrows
@@ -37,8 +24,8 @@ public class UserStorageService {
         String userRootFolder = userId.toString() + "/";
         String fullPathToFolder = userRootFolder + folderPath;
 
-        List<StorageObject> objects =factory.getService(fullPathToFolder)
-                        .findStorageObjectsWithPrefix(fullPathToFolder);
+        List<StorageObject> objects = factory.resolveOperation(fullPathToFolder)
+                .findObjectWithPrefix(fullPathToFolder);
 
         return objects;
     }
@@ -48,25 +35,15 @@ public class UserStorageService {
     }
 
 
-    public DownloadStorageObjectDto downloadUserItems(Long userId, String objectPath) {
+    public StorageObjectResourceDto downloadUserItems(Long userId, String objectPath) {
         String userRootFolder = userId.toString() + "/";
         String fullObjectPath = userRootFolder + objectPath;
 
         StorageObjectDto storageObject;
 
 
-        //todo create dto
-        if (isFolderPath(fullObjectPath)) {
-            storageObject = minioRepository.downloadFolder(fullObjectPath);
-        } else {
-            storageObject = minioRepository.downloadFile(fullObjectPath);
-        }
-
-        return DownloadStorageObjectDto.builder()
-                .nameForSave(storageObject.getName())
-                .size(storageObject.getSize())
-                .downloadResource(new InputStreamResource(storageObject.getInputStream()))
-                .build();
+        return factory.resolveOperation(fullObjectPath)
+                .downloadObject(fullObjectPath);
     }
 
 
@@ -75,8 +52,8 @@ public class UserStorageService {
         String fullSourcePath = userRootFolder + copyDto.sourcePath();
         String fullTargetPath = userRootFolder + copyDto.targetPath();
 
-        factory.getService(fullSourcePath)
-                .copyStorageObject(fullSourcePath, fullTargetPath);
+        factory.resolveOperation(fullSourcePath)
+                .copyObject(fullSourcePath, fullTargetPath);
     }
 
 
@@ -85,8 +62,8 @@ public class UserStorageService {
         String userRootFolder = userId.toString() + "/";
         String fullDeletePath = userRootFolder + deletePath;
 
-        factory.getService(fullDeletePath)
-                .deleteStorageObject(fullDeletePath);
+        factory.resolveOperation(fullDeletePath)
+                .deleteObjectByPath(fullDeletePath);
 
     }
 
@@ -96,8 +73,8 @@ public class UserStorageService {
         String fullSourcePath = userRootFolder + copyDto.sourcePath();
         String fullTargetPath = userRootFolder + copyDto.targetPath();
 
-        factory.getService(fullSourcePath)
-                .moveStorageObject(fullSourcePath, fullTargetPath);
+        factory.resolveOperation(fullSourcePath)
+                .moveObject(fullSourcePath, fullTargetPath);
     }
 
 
