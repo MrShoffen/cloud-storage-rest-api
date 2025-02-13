@@ -8,7 +8,6 @@ import io.minio.errors.*;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
-import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,12 +27,9 @@ public abstract class MinioOperations {
 
     public abstract void copyObject(String sourcePath, String targetPath);
 
-    public abstract StorageObjectResourceDto getObjectAsResource(String folderPath);
+    public abstract InputStream readObject(String folderPath);
 
-    public boolean objectExists(String path) {
-        return !findItemsWithPrefix(path, false)
-                .isEmpty();
-    }
+    public abstract boolean objectExists(String path);
 
     public List<StorageObject> findObjectWithPrefix(String fullPathToFolder) {
         List<Item> items = findItemsWithPrefix(fullPathToFolder, false);

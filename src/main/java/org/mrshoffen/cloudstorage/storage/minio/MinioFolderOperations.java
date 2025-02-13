@@ -72,7 +72,7 @@ public class MinioFolderOperations extends MinioOperations {
 
 
     @Override
-    public StorageObjectResourceDto getObjectAsResource(String downloadPath) {
+    public InputStream readObject(String downloadPath) {
         try {
             PipedInputStream pipedInputStream = new PipedInputStream();
             PipedOutputStream pipedOutputStream = new PipedOutputStream(pipedInputStream);
@@ -113,14 +113,16 @@ public class MinioFolderOperations extends MinioOperations {
                 }
             }).start();
 
-            String zipName = extractSimpleName(downloadPath).replace("/", ".zip");
-            return StorageObjectResourceDto.builder()
-                    .downloadResource(new InputStreamResource(pipedInputStream))
-                    .nameForSave(zipName)
-                    .build();
+            return pipedInputStream;
 
         } catch (IOException e) {
             throw new RuntimeException("Ошибка при создании потоков", e);
         }
+    }
+
+    @Override
+    public boolean objectExists(String path) {
+        return !findItemsWithPrefix(path, false)
+                .isEmpty();
     }
 }

@@ -1,18 +1,10 @@
 package org.mrshoffen.cloudstorage.storage.minio;
 
-import io.minio.CopyObjectArgs;
-import io.minio.CopySource;
-import io.minio.MinioClient;
-import io.minio.RemoveObjectArgs;
-import io.minio.errors.ErrorResponseException;
+import io.minio.*;
+import io.minio.errors.MinioException;
 import lombok.SneakyThrows;
-import org.apache.catalina.connector.Response;
-import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
-import org.mrshoffen.cloudstorage.storage.exception.FileNotFoundException;
-import org.mrshoffen.cloudstorage.storage.exception.MinioStorageException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
@@ -55,23 +47,24 @@ public class MinioFileOperations extends MinioOperations {
     }
 
 
+    @SneakyThrows
     @Override
-    public StorageObjectResourceDto getObjectAsResource(String downloadPath) {
+    public InputStream readObject(String downloadPath) {
+            return getFileStream(downloadPath);
+    }
+
+    @SneakyThrows
+    @Override
+    public boolean objectExists(String path) {
         try {
-            InputStream stream = getFileStream(downloadPath);
-
-            return StorageObjectResourceDto.builder()
-                    .downloadResource(new InputStreamResource(stream))
-                    .nameForSave(extractSimpleName(downloadPath))
-                    .build();
-
-        } catch (ErrorResponseException e) {
-            if (e.response().code() == Response.SC_NOT_FOUND) {
-                throw new FileNotFoundException("'%s' не существует в исходной папке".formatted(extractSimpleName(downloadPath)), e);
-            }
-            throw new MinioStorageException("Ошибка в хранилище файлов", e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            minioClient.statObject(
+                    StatObjectArgs.builder()
+                            .bucket(bucket)
+                            .object(path)
+                            .build());
+            return true;
+        } catch (MinioException e) {
+            return false;
         }
     }
 

@@ -8,8 +8,10 @@ import org.mrshoffen.cloudstorage.storage.exception.ConflictFileNameException;
 import org.mrshoffen.cloudstorage.storage.exception.FileNotFoundException;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperationResolver;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperations;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Repository;
 
+import java.io.InputStream;
 import java.util.List;
 
 @Repository
@@ -31,7 +33,12 @@ public class MinioRepository implements StorageObjectRepository {
 
         ensureObjectExists(path, operations);
 
-        return operations.getObjectAsResource(path);
+        InputStream stream = operations.readObject(path);
+
+        return StorageObjectResourceDto.builder()
+                .downloadResource(new InputStreamResource(stream))
+                .nameForSave(extractSimpleName(path))
+                .build();
     }
 
 
