@@ -37,14 +37,15 @@ public class TestController {
     @SneakyThrows
     @GetMapping
     public ResponseEntity<List<StorageObject>> test(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                    @RequestParam(value = "object") String objectName) {
+                                                    @RequestParam(value = "folder") String folder) {
 //todo add validation
 
         List<StorageObject> foldersAndFiles;
-        if (objectName.isBlank()) {
-            foldersAndFiles = userStorageService.getObjectsInRootFolder(user.getId());
+        if (folder.isBlank()) {
+            foldersAndFiles = userStorageService.listObjectsInRootFolder(user.getId());
         } else {
-            foldersAndFiles = userStorageService.getObjectsInFolder(user.getId(), objectName);
+            //todo remove over
+            foldersAndFiles = userStorageService.listObjectsInFolder(user.getId(), folder);
         }
         return ResponseEntity.ok(foldersAndFiles);
     }
@@ -52,8 +53,8 @@ public class TestController {
 
     @SneakyThrows
     @GetMapping("/download")
-    public ResponseEntity<Resource> download(@AuthenticationPrincipal(expression = "getUser") User user,
-                                             @RequestParam(value = "object") String objectPath) {
+    public ResponseEntity<Resource> downloadObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                   @RequestParam(value = "object") String objectPath) {
 
         StorageObjectResourceDto resource = userStorageService.downloadObject(user.getId(), objectPath);
 
@@ -67,10 +68,15 @@ public class TestController {
                 .body(resource.getDownloadResource());
     }
 
-    @PostMapping
-    public void upload(@RequestPart(required = false, name = "files") List<MultipartFile> files, String path) {
+    @PostMapping("/upload")
+    public void uploadObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                             @RequestPart(required = false, name = "object") List<MultipartFile> files,
+                             @RequestParam(value = "folder", required = false) String folder) {
+
+            userStorageService.uploadObjectsToFolder(user.getId(), files, folder);
 
 
+        System.out.println("loaded");
         return;
     }
 

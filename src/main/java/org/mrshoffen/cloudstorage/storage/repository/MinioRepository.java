@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
-import org.mrshoffen.cloudstorage.storage.exception.ConflictFileNameException;
-import org.mrshoffen.cloudstorage.storage.exception.FileNotFoundException;
+import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
+import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperationResolver;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperations;
 import org.springframework.core.io.InputStreamResource;
@@ -21,14 +21,23 @@ public class MinioRepository implements StorageObjectRepository {
     private final MinioOperationResolver operationResolver;
 
     @Override
+    public void uploadSingleObject(String objectPath, InputStream inputStream, long size) {
+        MinioOperations operations = operationResolver.resolve(objectPath);
+
+        ensureObjectNotExists(objectPath, operations);
+
+        operations.putObject(objectPath, inputStream, size);
+    }
+
+    @Override
     @SneakyThrows
-    public List<StorageObject> find(String path) {
+    public List<StorageObject> findAllObjectsInFolder(String path) {
         return operationResolver.resolve(path)
                 .findObjectWithPrefix(path);
     }
 
     @Override
-    public StorageObjectResourceDto download(String path) {
+    public StorageObjectResourceDto getObject(String path) {
         MinioOperations operations = operationResolver.resolve(path);
 
         ensureObjectExists(path, operations);
@@ -43,7 +52,7 @@ public class MinioRepository implements StorageObjectRepository {
 
 
     @Override
-    public void copy(String sourcePath, String targetPath) {
+    public void copyObject(String sourcePath, String targetPath) {
         MinioOperations operations = operationResolver.resolve(sourcePath);
 
         ensureObjectExists(sourcePath, operations);
@@ -55,7 +64,7 @@ public class MinioRepository implements StorageObjectRepository {
 
     @Override
     @SneakyThrows
-    public void delete(String deletePath) {
+    public void deleteObject(String deletePath) {
         MinioOperations operations = operationResolver.resolve(deletePath);
 
         ensureObjectExists(deletePath, operations);
@@ -65,7 +74,7 @@ public class MinioRepository implements StorageObjectRepository {
 
     @Override
     @SneakyThrows
-    public void move(String sourcePath, String targetPath) {
+    public void moveObject(String sourcePath, String targetPath) {
         MinioOperations operations = operationResolver.resolve(sourcePath);
 
         ensureObjectExists(sourcePath, operations);
@@ -78,14 +87,14 @@ public class MinioRepository implements StorageObjectRepository {
 
     private void ensureObjectExists(String path, MinioOperations operations) {
         if (!operations.objectExists(path)) {
-            throw new FileNotFoundException("'%s' не существует в исходной папке"
+            throw new StorageObjectNotFoundException("'%s' не существует в исходной папке"
                     .formatted(extractSimpleName(path)));
         }
     }
 
     private void ensureObjectNotExists(String path, MinioOperations operations) {
         if (operations.objectExists(path)) {
-            throw new ConflictFileNameException("'%s' уже существует в целевой папке"
+            throw new StorageObjectAlreadyExistsException("'%s' уже существует в целевой папке"
                     .formatted(extractSimpleName(path)));
 
         }

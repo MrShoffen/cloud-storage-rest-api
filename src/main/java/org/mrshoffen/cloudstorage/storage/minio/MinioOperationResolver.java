@@ -20,9 +20,14 @@ public class MinioOperationResolver {
         }
     }
 
+    public MinioOperations any(){
+        return minioFileService;
+    }
 
     static boolean isFolderPath(String fullTargetPath) {
         return fullTargetPath.endsWith("/");
     }
+
+
 
 }

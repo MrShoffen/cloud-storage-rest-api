@@ -46,7 +46,6 @@ public class MinioFileOperations extends MinioOperations {
         );
     }
 
-
     @SneakyThrows
     @Override
     public InputStream readObject(String downloadPath) {

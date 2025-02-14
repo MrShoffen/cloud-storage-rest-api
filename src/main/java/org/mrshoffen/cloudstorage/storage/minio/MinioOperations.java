@@ -1,12 +1,10 @@
 package org.mrshoffen.cloudstorage.storage.minio;
 
-import io.minio.GetObjectArgs;
-import io.minio.ListObjectsArgs;
-import io.minio.MinioClient;
-import io.minio.Result;
+import io.minio.*;
 import io.minio.errors.*;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
 
 import java.io.IOException;
@@ -22,6 +20,17 @@ public abstract class MinioOperations {
     protected final String bucket;
 
     protected final MinioClient minioClient;
+
+    @SneakyThrows
+    public void putObject(String path, InputStream stream, long size) {
+        minioClient.putObject(
+                PutObjectArgs.builder()
+                        .bucket(bucket)
+                        .object(path)
+                        .stream(stream, size, -1)
+                        .build()
+        );
+    }
 
     public abstract void deleteObjectByPath(String path);
 
@@ -102,4 +111,4 @@ public abstract class MinioOperations {
         return fullPath.substring(firstSlashIndex + 1);
     }
 
- }
+}

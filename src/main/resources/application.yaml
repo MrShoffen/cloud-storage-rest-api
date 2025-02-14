@@ -23,8 +23,9 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 500MB
-      max-request-size: 500MB
+      max-file-size: 2048MB
+      max-request-size: 2048MB
+
 
   profiles:
     active: restControllerSecurity
@@ -42,7 +43,3 @@ minio:
 #    redis:
 #      repository-type: indexed
 
-
-
-#security:
-#  type: restControllerSecurity
