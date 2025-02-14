@@ -9,20 +9,26 @@ import org.mrshoffen.cloudstorage.storage.model.StorageObject;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
 import org.mrshoffen.cloudstorage.storage.repository.StorageObjectRepository;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 @RequiredArgsConstructor
 public class UserStorageService {
 
     private final StorageObjectRepository repository;
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     @SneakyThrows
     public List<StorageObject> listObjectsInFolder(Long userId, String folderPath) {
@@ -72,6 +78,7 @@ public class UserStorageService {
     }
 
     @SneakyThrows
+    @Async
     public void uploadObjectsToFolder(Long userId, List<MultipartFile> files, String folder) {
         String userRootFolder = userId.toString() + "/";
         String fullPathToFolder = userRootFolder + (folder == null ? "" : folder);
@@ -88,13 +95,12 @@ public class UserStorageService {
 
         for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
-
             int firstSlash = fileName.indexOf("/");
 
             if (firstSlash == -1) {
                 filesWithoutFolder.add(file);
             } else {
-                String prefix = fileName.substring(0, firstSlash+1);
+                String prefix = fileName.substring(0, firstSlash + 1);
                 innerFolders.computeIfAbsent(prefix, k -> new ArrayList<>()).add(file);
             }
         }
@@ -117,17 +123,19 @@ public class UserStorageService {
                 continue;
             }
 
-            for (MultipartFile file : innerFolders.get(innerFolder)) {
-                try (InputStream stream = file.getInputStream()) {
-                    repository.uploadSingleObject(
-                            fullPathToFolder + file.getOriginalFilename(),
-                            stream,
-                            file.getSize());
-                }
-            }
-
-
+            this.uploadFolder(innerFolders.get(innerFolder), fullPathToFolder);
         }
+    }
 
+    @SneakyThrows
+    private void uploadFolder(List<MultipartFile> innerFolder, String fullPathToFolder) {
+        for (MultipartFile file : innerFolder) {
+            try (InputStream stream = file.getInputStream()) {
+                repository.uploadSingleObject(
+                        fullPathToFolder + file.getOriginalFilename(),
+                        stream,
+                        file.getSize());
+            }
+        }
     }
 }
