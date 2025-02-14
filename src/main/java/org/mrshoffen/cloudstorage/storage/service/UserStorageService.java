@@ -83,15 +83,15 @@ public class UserStorageService {
 
     @SneakyThrows
     public List<StorageOperationResponse> uploadObjectsToFolder(Long userId, List<MultipartFile> files, String folder) {
+        boolean isRootFolder = folder == null || "".equals(folder);
+
         String userRootFolder = userId.toString() + "/";
-        String fullPathToFolder = userRootFolder + (folder == null ? "" : folder);
+        String fullPathToFolder = userRootFolder + (isRootFolder ? "" : folder);
 
-//todo calculate size
-        if (repository.findAllObjectsInFolder(fullPathToFolder).isEmpty()) {
-            throw new StorageObjectNotFoundException("Папка с именем '%s' не существует"
-                    .formatted(folder));
-        }
-
+//        if (!isRootFolder && repository.findAllObjectsInFolder(fullPathToFolder).isEmpty()) {
+//            throw new StorageObjectNotFoundException("Папка с именем '%s' не существует"
+//                    .formatted(folder));
+//        }
 
         Map<String, List<MultipartFile>> innerFolders = new HashMap<>();
         List<MultipartFile> filesWithoutFolder = new ArrayList<>();

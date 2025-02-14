@@ -1,6 +1,8 @@
 package org.mrshoffen.cloudstorage.storage.controller;
 
+import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
+import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
@@ -22,6 +24,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -53,6 +56,26 @@ public class TestController {
         return ResponseEntity.ok(foldersAndFiles);
     }
 
+    @SneakyThrows
+    @GetMapping("/preview")
+    public String getObjectPreview(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                   @RequestParam(value = "object") String objectPath) {
+
+        String userRootFolder = user.getId().toString() + "/";
+        String foldPath = userRootFolder + objectPath;
+
+
+        String presignedObjectUrl = minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Method.GET)
+                        .bucket(bucket)
+                        .object(foldPath)
+                        .expiry(1, TimeUnit.HOURS) // Срок действия 1 час
+                        .build()
+        );
+
+        return presignedObjectUrl;
+    }
 
     @SneakyThrows
     @GetMapping("/download")
