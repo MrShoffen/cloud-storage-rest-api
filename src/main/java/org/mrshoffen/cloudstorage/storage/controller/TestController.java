@@ -36,6 +36,9 @@ public class TestController {
     @Value("${minio.bucket-name}")
     private String bucket;
 
+    @Value("${minio.endpoint}")
+    private String url;
+
     private final MinioClient minioClient;
 
     private final UserStorageService userStorageService;
@@ -59,7 +62,7 @@ public class TestController {
     @SneakyThrows
     @GetMapping("/preview")
     public String getObjectPreview(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                   @RequestParam(value = "object") String objectPath) {
+                                   @RequestParam(value = "object") String objectPath) {
 
         String userRootFolder = user.getId().toString() + "/";
         String foldPath = userRootFolder + objectPath;
@@ -74,7 +77,9 @@ public class TestController {
                         .build()
         );
 
-        return presignedObjectUrl;
+        return presignedObjectUrl
+                .replaceFirst(url, "")
+                .replaceFirst("/" + bucket + "/", "");
     }
 
     @SneakyThrows
