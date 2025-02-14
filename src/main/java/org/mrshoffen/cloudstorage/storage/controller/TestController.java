@@ -73,8 +73,8 @@ public class TestController {
                              @RequestPart(required = false, name = "object") List<MultipartFile> files,
                              @RequestParam(value = "folder", required = false) String folder) {
 
-            userStorageService.uploadObjectsToFolder(user.getId(), files, folder);
-
+//            userStorageService.uploadObjectsToFolder(user.getId(), files, folder);
+        userStorageService.uploadObjects(user.getId(), files);
 
         System.out.println("loaded");
         return;

@@ -22,7 +22,6 @@ public abstract class MinioOperations {
     protected final MinioClient minioClient;
 
     @SneakyThrows
-
     public void putObject(String path, InputStream stream, long size) {
         minioClient.putObject(
                 PutObjectArgs.builder()

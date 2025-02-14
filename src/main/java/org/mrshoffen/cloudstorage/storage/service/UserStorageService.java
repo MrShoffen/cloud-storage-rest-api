@@ -78,7 +78,6 @@ public class UserStorageService {
     }
 
     @SneakyThrows
-    @Async
     public void uploadObjectsToFolder(Long userId, List<MultipartFile> files, String folder) {
         String userRootFolder = userId.toString() + "/";
         String fullPathToFolder = userRootFolder + (folder == null ? "" : folder);
@@ -125,6 +124,22 @@ public class UserStorageService {
 
             this.uploadFolder(innerFolders.get(innerFolder), fullPathToFolder);
         }
+    }
+
+
+    @SneakyThrows
+    public void uploadObjects(Long userId, List<MultipartFile> files) {
+        String userRootFolder = userId.toString() + "/";
+
+
+        for (MultipartFile file : files) {
+            String fileName = file.getOriginalFilename();
+            int firstSlash = fileName.indexOf("/");
+
+            repository.uploadSingleObject(userRootFolder + fileName, file.getInputStream(), file.getSize());
+        }
+
+
     }
 
     @SneakyThrows
