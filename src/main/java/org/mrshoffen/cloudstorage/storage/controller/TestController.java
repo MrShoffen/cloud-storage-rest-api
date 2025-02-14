@@ -9,6 +9,7 @@ import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResour
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
 import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
+import org.mrshoffen.cloudstorage.storage.service.PresignedCacheService;
 import org.mrshoffen.cloudstorage.storage.service.UserStorageService;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,6 +44,8 @@ public class TestController {
 
     private final UserStorageService userStorageService;
 
+    private final PresignedCacheService cacheService;
+
     @SneakyThrows
     @GetMapping("/list")
     public ResponseEntity<List<StorageObject>> test(@AuthenticationPrincipal(expression = "getUser") User user,
@@ -67,6 +70,12 @@ public class TestController {
         String userRootFolder = user.getId().toString() + "/";
         String foldPath = userRootFolder + objectPath;
 
+        String cachedUrl = cacheService.getPresignedUrl(foldPath);
+
+
+        if (cachedUrl != null) {
+            return cachedUrl;
+        }
 
         String presignedObjectUrl = minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
@@ -77,9 +86,13 @@ public class TestController {
                         .build()
         );
 
-        return presignedObjectUrl
+        String pres = presignedObjectUrl
                 .replaceFirst(url, "")
                 .replaceFirst("/" + bucket + "/", "");
+
+        cacheService.savePresignedUrl(foldPath, pres, 3500);
+
+        return pres;
     }
 
     @SneakyThrows
