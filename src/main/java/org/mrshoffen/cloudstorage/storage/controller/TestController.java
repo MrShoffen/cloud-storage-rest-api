@@ -6,12 +6,13 @@ import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
 import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
-import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectOperationResponse;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
 import org.mrshoffen.cloudstorage.storage.service.UserStorageService;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +22,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.Map;
+
+import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("/api/v1/files") //todo rename endpoint
@@ -35,7 +38,7 @@ public class TestController {
     private final UserStorageService userStorageService;
 
     @SneakyThrows
-    @GetMapping
+    @GetMapping("/list")
     public ResponseEntity<List<StorageObject>> test(@AuthenticationPrincipal(expression = "getUser") User user,
                                                     @RequestParam(value = "folder") String folder) {
 //todo add validation
@@ -69,20 +72,19 @@ public class TestController {
     }
 
     @PostMapping("/upload")
-    public void uploadObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                             @RequestPart(required = false, name = "object") List<MultipartFile> files,
-                             @RequestParam(value = "folder", required = false) String folder) {
+    public ResponseEntity<List<StorageOperationResponse>> uploadObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                       @RequestPart(required = false, name = "object") List<MultipartFile> files,
+                                                                       @RequestParam(value = "folder", required = false) String folder) {
 
-//            userStorageService.uploadObjectsToFolder(user.getId(), files, folder);
-        userStorageService.uploadObjects(user.getId(), files);
+        List<StorageOperationResponse> response = userStorageService.uploadObjectsToFolder(user.getId(), files, folder);
 
-        System.out.println("loaded");
-        return;
+        return ResponseEntity.status(MULTI_STATUS)
+                .body(response);
     }
 
     @PostMapping("/copy")
-    public ResponseEntity<StorageObjectOperationResponse> copyObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                                     @RequestBody CopyMoveRequest copyDto) {
+    public ResponseEntity<StorageOperationResponse> copyObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                               @RequestBody CopyMoveRequest copyDto) {
         userStorageService.copyObject(user.getId(), copyDto);
 
         return ResponseEntity
@@ -92,38 +94,44 @@ public class TestController {
                                 .build(Map.of("path", copyDto.targetPath()))
                 )
                 .body(
-                        StorageObjectOperationResponse.builder()
-                                .message("Копирование успешно выполнено")
+                        StorageOperationResponse.builder()
+                                .status(CREATED.value())
+                                .title(CREATED.getReasonPhrase())
+                                .detail("Копирование успешно выполнено")
                                 .path(copyDto.targetPath())
                                 .build()
                 );
     }
 
     @PutMapping("/move")
-    public ResponseEntity<StorageObjectOperationResponse> moveObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                                     @RequestBody CopyMoveRequest moveDto) {
+    public ResponseEntity<StorageOperationResponse> moveObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                               @RequestBody CopyMoveRequest moveDto) {
         userStorageService.moveObject(user.getId(), moveDto);
 
         return ResponseEntity
                 .ok()
                 .body(
-                        StorageObjectOperationResponse.builder()
-                                .message("Перемещение успешно выполнено")
+                        StorageOperationResponse.builder()
+                                .status(OK.value())
+                                .title(OK.getReasonPhrase())
+                                .detail("Перемещение успешно выполнено")
                                 .path(moveDto.targetPath())
                                 .build()
                 );
     }
 
     @DeleteMapping
-    public ResponseEntity<StorageObjectOperationResponse> deleteObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                                       @RequestParam(value = "object") String objectName) {
+    public ResponseEntity<StorageOperationResponse> deleteObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                 @RequestParam(value = "object") String objectName) {
 
         userStorageService.deleteObject(user.getId(), objectName);
         return ResponseEntity
                 .ok()
                 .body(
-                        StorageObjectOperationResponse.builder()
-                                .message("Удаление успешно выполнено")
+                        StorageOperationResponse.builder()
+                                .status(NO_CONTENT.value())
+                                .title(NO_CONTENT.getReasonPhrase())
+                                .detail("Удаление успешно выполнено")
                                 .build()
                 );
     }

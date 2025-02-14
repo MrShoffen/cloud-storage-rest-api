@@ -8,7 +8,9 @@ import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundExcepti
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
 import org.mrshoffen.cloudstorage.storage.repository.StorageObjectRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static org.springframework.http.HttpStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -78,7 +82,7 @@ public class UserStorageService {
     }
 
     @SneakyThrows
-    public void uploadObjectsToFolder(Long userId, List<MultipartFile> files, String folder) {
+    public List<StorageOperationResponse> uploadObjectsToFolder(Long userId, List<MultipartFile> files, String folder) {
         String userRootFolder = userId.toString() + "/";
         String fullPathToFolder = userRootFolder + (folder == null ? "" : folder);
 
@@ -104,53 +108,78 @@ public class UserStorageService {
             }
         }
 
-        for (MultipartFile file : filesWithoutFolder) {
-            try (InputStream stream = file.getInputStream()) {
-                repository.uploadSingleObject(
-                        fullPathToFolder + file.getOriginalFilename(),
-                        stream,
-                        file.getSize());
-            } catch (StorageObjectAlreadyExistsException ex) {
 
-            }
+        List<StorageOperationResponse> responseList = new ArrayList<>();
+
+        for (MultipartFile file : filesWithoutFolder) {
+            StorageOperationResponse response = uploadFile(file, fullPathToFolder, folder);
+            responseList.add(response);
         }
 
         for (String innerFolder : innerFolders.keySet()) {
-            List<StorageObject> allObjectsInFolder = repository.findAllObjectsInFolder(fullPathToFolder + innerFolder);
-            if (allObjectsInFolder.size() > 0) {
-                //todo add to response
-                continue;
-            }
+            StorageOperationResponse response = uploadFolder(
+                    innerFolders.get(innerFolder),
+                    folder,
+                    innerFolder,
+                    fullPathToFolder);
 
-            this.uploadFolder(innerFolders.get(innerFolder), fullPathToFolder);
+            responseList.add(response);
         }
+
+        return responseList;
     }
 
 
     @SneakyThrows
-    public void uploadObjects(Long userId, List<MultipartFile> files) {
-        String userRootFolder = userId.toString() + "/";
+    private StorageOperationResponse uploadFile(MultipartFile file, String fullPathToFolder, String folder) {
+        try (InputStream stream = file.getInputStream()) {
+            String objectPath = fullPathToFolder + file.getOriginalFilename();
+            repository.uploadSingleObject(objectPath, stream, file.getSize(), false);
 
-
-        for (MultipartFile file : files) {
-            String fileName = file.getOriginalFilename();
-            int firstSlash = fileName.indexOf("/");
-
-            repository.uploadSingleObject(userRootFolder + fileName, file.getInputStream(), file.getSize());
+            return StorageOperationResponse.builder()
+                    .status(CREATED.value())
+                    .title(CREATED.getReasonPhrase())
+                    .detail("Файл '%s' успешно загружен".formatted(file.getOriginalFilename()))
+                    .path(folder + file.getOriginalFilename())
+                    .build();
+        } catch (StorageObjectAlreadyExistsException ex) {
+            return StorageOperationResponse.builder()
+                    .status(CONFLICT.value())
+                    .title(CONFLICT.getReasonPhrase())
+                    .detail(ex.getMessage())
+                    .path(folder + file.getOriginalFilename())
+                    .build();
         }
-
 
     }
 
     @SneakyThrows
-    private void uploadFolder(List<MultipartFile> innerFolder, String fullPathToFolder) {
+    private StorageOperationResponse uploadFolder(List<MultipartFile> innerFolder, String baseFolder, String innerFolderName, String fullPathToFolder) {
+        List<StorageOperationResponse> responseList = new ArrayList<>();
+
+        List<StorageObject> allObjectsInFolder = repository.findAllObjectsInFolder(fullPathToFolder + innerFolderName);
+        if (!allObjectsInFolder.isEmpty()) {
+            return StorageOperationResponse.builder()
+                    .status(CONFLICT.value())
+                    .title(CONFLICT.getReasonPhrase())
+                    .detail("Папка '%s' уже существует в целевой директории '%s'".formatted(innerFolderName, baseFolder))
+                    .path(baseFolder + innerFolderName)
+                    .build();
+        }
         for (MultipartFile file : innerFolder) {
             try (InputStream stream = file.getInputStream()) {
                 repository.uploadSingleObject(
                         fullPathToFolder + file.getOriginalFilename(),
                         stream,
-                        file.getSize());
+                        file.getSize(), true);
             }
         }
+        return StorageOperationResponse.builder()
+                .status(CREATED.value())
+                .title(CREATED.getReasonPhrase())
+                .detail("Папка '%s' успешно загружена".formatted(innerFolderName))
+                .path(baseFolder + innerFolderName)
+                .build();
+
     }
 }

@@ -21,10 +21,12 @@ public class MinioRepository implements StorageObjectRepository {
     private final MinioOperationResolver operationResolver;
 
     @Override
-    public void uploadSingleObject(String objectPath, InputStream inputStream, long size) {
+    public void uploadSingleObject(String objectPath, InputStream inputStream, long size, boolean overwrite) {
         MinioOperations operations = operationResolver.resolve(objectPath);
 
-        ensureObjectNotExists(objectPath, operations);
+        if (!overwrite) {
+            ensureObjectNotExists(objectPath, operations);
+        }
 
         operations.putObject(objectPath, inputStream, size);
     }

@@ -45,14 +45,14 @@ public abstract class MinioOperations {
 
         return items.stream()
                 .map(item -> {
-                    Long size = getItemSize(item);
+//                    Long size = getItemSize(item);
 
                     return StorageObject.builder()
                             .name(extractSimpleName(item.objectName()))
                             .path(extractRelativePath(item.objectName()))
                             .isFolder(item.isDir())
                             .lastModified(item.lastModified())
-                            .size(size)
+                            .size(item.size())
                             .build();
                 })
                 .toList();

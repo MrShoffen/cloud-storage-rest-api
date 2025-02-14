@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface StorageObjectRepository {
 
-    void uploadSingleObject(String objectPath, InputStream inputStream, long size);
+    void uploadSingleObject(String objectPath, InputStream inputStream, long size, boolean overwrite);
 
     List<StorageObject> findAllObjectsInFolder(String path);
 

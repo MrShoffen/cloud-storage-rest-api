@@ -9,7 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 @Builder
-public class StorageObjectOperationResponse {
+
+public class StorageOperationResponse {
+
+    private String title;
+    private int status;
+    private String detail;
     private String path;
-    private String message;
 }
