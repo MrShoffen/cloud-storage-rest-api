@@ -6,20 +6,18 @@ import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
-import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
 import org.mrshoffen.cloudstorage.storage.repository.StorageObjectRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static org.springframework.http.HttpStatus.*;
+import static org.springframework.http.HttpStatus.CONFLICT;
+import static org.springframework.http.HttpStatus.CREATED;
 
 @Service
 @RequiredArgsConstructor
@@ -31,6 +29,9 @@ public class UserStorageService {
 
     @Value("${minio.presigned-timeout}")
     private int presignedLinkTimeout;
+
+    @Value("${minio.empty-folder-tag}")
+    private String emptyFolderTag;
 
     public String getPreviewLink(Long userId, String objectPath) {
         String fullPath = getFullPath(userId, objectPath);
@@ -63,9 +64,9 @@ public class UserStorageService {
         return repository.getObject(fullObjectPath);
     }
 
-    public void copyObject(Long userId, CopyMoveRequest copyDto) {
-        String fullSourcePath = getFullPath(userId, copyDto.sourcePath());
-        String fullTargetPath = getFullPath(userId, copyDto.targetPath());
+    public void copyObject(Long userId, String from, String to) {
+        String fullSourcePath = getFullPath(userId, from);
+        String fullTargetPath = getFullPath(userId, to);
         repository.copyObject(fullSourcePath, fullTargetPath);
     }
 
@@ -76,19 +77,29 @@ public class UserStorageService {
     }
 
     @SneakyThrows
-    public void moveObject(Long userId, CopyMoveRequest copyDto) {
-        String fullSourcePath = getFullPath(userId, copyDto.sourcePath());
-        String fullTargetPath = getFullPath(userId, copyDto.targetPath());
+    public void moveObject(Long userId, String from, String to) {
+        String fullSourcePath = getFullPath(userId, from);
+        String fullTargetPath = getFullPath(userId, to);
         repository.moveObject(fullSourcePath, fullTargetPath);
+    }
+
+    public void createFolder(Long userId, String folderPath) {
+        String emptyFolderTagPath = getFullPath(userId, folderPath) + emptyFolderTag;
+        try {
+            repository.uploadObject(emptyFolderTagPath, new ByteArrayInputStream(new byte[0]), 0, false);
+        } catch (StorageObjectAlreadyExistsException e) {
+            throw new StorageObjectAlreadyExistsException("Папка '%s' уже существует в целевой директории".formatted(folderPath));
+        }
     }
 
     @SneakyThrows
     public List<StorageOperationResponse> uploadObjectsToFolder(Long userId, List<MultipartFile> files, String targetFolder) {
         String fullPathToTargetFolder = getFullPath(userId, targetFolder);
 
-        //parse files and folders for upload
+        //парсинг файлов и папок для загрузки
         Map<String, List<MultipartFile>> innerFolders = new HashMap<>();
         List<MultipartFile> filesWithoutFolder = new ArrayList<>();
+        Set<String> allSubFolders = new HashSet<>();
 
         for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
@@ -99,9 +110,9 @@ public class UserStorageService {
             } else {
                 String prefix = fileName.substring(0, firstSlash + 1);
                 innerFolders.computeIfAbsent(prefix, k -> new ArrayList<>()).add(file);
+                allSubFolders.addAll(getAllSubPaths(fileName));
             }
         }
-
 
         List<StorageOperationResponse> responseList = new ArrayList<>();
 
@@ -118,6 +129,15 @@ public class UserStorageService {
                     fullPathToTargetFolder);
 
             responseList.add(response);
+        }
+
+        //создание пустых тегов у подпапок
+        for (String subFolder : allSubFolders) {
+            String subfolderEmptyTag = fullPathToTargetFolder + subFolder + emptyFolderTag;
+            repository.uploadObject(subfolderEmptyTag,
+                    new ByteArrayInputStream(new byte[0]),
+                    0,
+                    true);
         }
 
         return responseList;
@@ -144,11 +164,11 @@ public class UserStorageService {
                     .path(folder + file.getOriginalFilename())
                     .build();
         }
-
     }
 
     @SneakyThrows
     private StorageOperationResponse uploadFolder(List<MultipartFile> innerFolder, String baseFolder, String innerFolderName, String fullPathToFolder) {
+
         List<StorageObject> allObjectsInFolder = repository.findAllObjectsInFolder(fullPathToFolder + innerFolderName);
         if (!allObjectsInFolder.isEmpty()) {
             return StorageOperationResponse.builder()
@@ -175,8 +195,22 @@ public class UserStorageService {
                 .build();
     }
 
+
+    public Set<String> getAllSubPaths(String path) {
+        Set<String> subPaths = new HashSet<>();
+        StringBuilder currentPath = new StringBuilder();
+
+        String[] parts = path.split("/");
+
+        for (int i = 0; i < parts.length - 1; i++) {
+            currentPath.append(parts[i]).append("/");
+            subPaths.add(currentPath.toString());
+        }
+
+        return subPaths;
+    }
+
     private static String getFullPath(Long userId, String folderPath) {
         return userId.toString() + "/" + (folderPath == null ? "" : folderPath);
     }
-
 }

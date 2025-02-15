@@ -3,7 +3,6 @@ package org.mrshoffen.cloudstorage.storage.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
-import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
 import org.mrshoffen.cloudstorage.storage.service.UserStorageService;
@@ -23,31 +22,53 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
-@RequestMapping("/api/v1/files") //todo rename endpoint
+@RequestMapping("/api/v1/resources") //todo rename endpoint
 @RequiredArgsConstructor
 public class StorageController {
 
     private final UserStorageService userStorageService;
 
     @GetMapping
-    public ResponseEntity<StorageObject> objectStats(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                     @RequestParam(value = "object", required = false) String object) {
+    public ResponseEntity<StorageObject> getObjectStats(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                        @RequestParam(value = "path") String object) {
         StorageObject stats = userStorageService.getObjectStats(user.getId(), object);
         return ResponseEntity.ok(stats);
     }
 
+    @PutMapping
+    public ResponseEntity<StorageOperationResponse> createFolder(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                 @RequestParam(value = "path") String folderPath) {
+
+        userStorageService.createFolder(user.getId(), folderPath);
+
+        return ResponseEntity
+                .created(
+                        UriComponentsBuilder
+                                .fromPath("{path}")
+                                .build(Map.of("path", folderPath))
+                )
+                .body(
+                        StorageOperationResponse.builder()
+                                .status(CREATED.value())
+                                .title(CREATED.getReasonPhrase())
+                                .detail("Папка успешно создана")
+                                .path(folderPath)
+                                .build()
+                );
+    }
+
     @SneakyThrows
-    @GetMapping("/list")
-    public ResponseEntity<List<StorageObject>> test(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                    @RequestParam(value = "folder") String folder) {
-        List<StorageObject> content = userStorageService.listObjectsInFolder(user.getId(), folder);
+    @GetMapping("/files")
+    public ResponseEntity<List<StorageObject>> getObjectsInFolder(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                  @RequestParam(value = "path") String folderPath) {
+        List<StorageObject> content = userStorageService.listObjectsInFolder(user.getId(), folderPath);
         return ResponseEntity.ok(content);
     }
 
     @SneakyThrows
     @GetMapping("/preview")
     public String getObjectPreview(@AuthenticationPrincipal(expression = "getUser") User user,
-                                   @RequestParam(value = "object") String objectPath) {
+                                   @RequestParam(value = "path") String objectPath) {
 
         return userStorageService.getPreviewLink(user.getId(), objectPath);
     }
@@ -55,7 +76,7 @@ public class StorageController {
     @SneakyThrows
     @GetMapping("/download")
     public ResponseEntity<Resource> downloadObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                   @RequestParam(value = "object") String objectPath) {
+                                                   @RequestParam(value = "path") String objectPath) {
 
         StorageObjectResourceDto resource = userStorageService.downloadObject(user.getId(), objectPath);
 
@@ -70,57 +91,61 @@ public class StorageController {
 
     @PostMapping("/upload")
     public ResponseEntity<List<StorageOperationResponse>> uploadObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                                       @RequestPart(required = false, name = "object") List<MultipartFile> files,
-                                                                       @RequestParam(value = "folder", required = false) String folder) {
-
+                                                                       @RequestPart(name = "object") List<MultipartFile> files,
+                                                                       @RequestParam(value = "path") String folder) {
         List<StorageOperationResponse> response = userStorageService.uploadObjectsToFolder(user.getId(), files, folder);
-
         return ResponseEntity.status(MULTI_STATUS)
                 .body(response);
     }
 
     @PostMapping("/copy")
     public ResponseEntity<StorageOperationResponse> copyObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                               @RequestBody CopyMoveRequest copyDto) {
-        userStorageService.copyObject(user.getId(), copyDto);
+                                                               @RequestParam(value = "from") String source,
+                                                               @RequestParam(value = "path") String target) {
+        userStorageService.copyObject(user.getId(), source, target);
 
         return ResponseEntity
                 .created(
                         UriComponentsBuilder
-                                .fromPath("/api/v1/folders/{path}")
-                                .build(Map.of("path", copyDto.targetPath()))
+                                .fromPath("{path}")
+                                .build(Map.of("path", target))
                 )
                 .body(
                         StorageOperationResponse.builder()
                                 .status(CREATED.value())
                                 .title(CREATED.getReasonPhrase())
                                 .detail("Копирование успешно выполнено")
-                                .path(copyDto.targetPath())
+                                .path(target)
                                 .build()
                 );
     }
 
     @PutMapping("/move")
     public ResponseEntity<StorageOperationResponse> moveObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                               @RequestBody CopyMoveRequest moveDto) {
-        userStorageService.moveObject(user.getId(), moveDto);
+                                                               @RequestParam(value = "from") String source,
+                                                               @RequestParam(value = "path") String target) {
+        userStorageService.moveObject(user.getId(), source, target);
         return ResponseEntity
-                .ok()
+                .created(
+                        UriComponentsBuilder
+                                .fromPath("{path}")
+                                .build(Map.of("path", target))
+                )
                 .body(
                         StorageOperationResponse.builder()
                                 .status(OK.value())
                                 .title(OK.getReasonPhrase())
                                 .detail("Перемещение успешно выполнено")
-                                .path(moveDto.targetPath())
+                                .path(target)
                                 .build()
                 );
     }
 
     @DeleteMapping
     public ResponseEntity<StorageOperationResponse> deleteObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                                 @RequestParam(value = "object") String objectName) {
+                                                                 @RequestParam(value = "path") String objectPath) {
 
-        userStorageService.deleteObject(user.getId(), objectName);
+        userStorageService.deleteObject(user.getId(), objectPath);
         return ResponseEntity
                 .ok()
                 .body(

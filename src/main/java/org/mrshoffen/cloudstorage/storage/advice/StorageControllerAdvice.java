@@ -6,6 +6,7 @@ import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationRes
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import static org.springframework.http.HttpStatus.*;
 
@@ -35,4 +36,17 @@ public class StorageControllerAdvice {
                                 .build()
                 );
     }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<StorageOperationResponse> handleMaxUploadSizeExceededException(MaxUploadSizeExceededException ex) {
+        return ResponseEntity.status(PAYLOAD_TOO_LARGE)
+                .body(
+                        StorageOperationResponse.builder()
+                                .status(PAYLOAD_TOO_LARGE.value())
+                                .title(PAYLOAD_TOO_LARGE.getReasonPhrase())
+                                .detail(ex.getMessage())
+                                .build()
+                );
+    }
+
 }

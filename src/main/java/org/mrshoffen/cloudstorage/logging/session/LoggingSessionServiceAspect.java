@@ -101,21 +101,4 @@ public class LoggingSessionServiceAspect {
         log.info("  {} : {} - {} ", className, method, args[0]);
     }
 
-//    @Pointcut(value = "execution(* org.springframework.session.data.redis.RedisIndexedSessionRepository.save(*)))")
-//    public void sessionSavedPointcut() {
-//    }
-//
-//    @AfterReturning("sessionSavedPointcut()")
-//    public void afterSessionSaved(JoinPoint joinPoint) {
-//        Object[] args = joinPoint.getArgs();
-//        var session = (RedisIndexedSessionRepository.RedisSession) args[0];
-//        String className = joinPoint.getTarget().getClass().getSimpleName();
-//        String method = joinPoint.getSignature().getName();
-//        SecurityContext context = session.getAttribute(SPRING_SECURITY_CONTEXT_KEY);
-//        if (context != null) {
-//            log.info("  {} : {} - id:[{}] - data:[{}]", className, method, session.getId(),
-//                    context.getAuthentication());
-//        }
-//    }
-
 }

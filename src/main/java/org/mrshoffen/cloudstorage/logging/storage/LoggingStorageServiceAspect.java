@@ -6,7 +6,6 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,7 +51,7 @@ public class LoggingStorageServiceAspect {
                 ex.toString());
     }
 
-    @Pointcut("execution(* org.mrshoffen.cloudstorage.storage.service.UserStorageService.*(Long,org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest))")
+    @Pointcut("execution(* org.mrshoffen.cloudstorage.storage.service.UserStorageService.*(Long, String, String))")
     public void storageOperationsWithCopyDto() {
     }
 
@@ -60,30 +59,32 @@ public class LoggingStorageServiceAspect {
     public void afterReturningCopyDtoMethod(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
         Long userId = (Long) args[0];
-        CopyMoveRequest dto = (CopyMoveRequest) args[1];
+        String source = (String) args[1];
+        String target = (String) args[2];
 
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String method = joinPoint.getSignature().getName();
 
         log.info("{} : {} : SUCCESS : User[{}] : From - {} : To - {}", className, method,
                 userId,
-                dto.sourcePath(),
-                dto.targetPath());
+                source,
+                target);
     }
 
     @AfterThrowing(value = "storageOperationsWithCopyDto()", throwing = "ex")
     public void afterFailCopyDtoMethod(JoinPoint joinPoint, Exception ex) {
         Object[] args = joinPoint.getArgs();
         Long userId = (Long) args[0];
-        CopyMoveRequest dto = (CopyMoveRequest) args[1];
+        String source = (String) args[1];
+        String target = (String) args[2];
 
         String className = joinPoint.getTarget().getClass().getSimpleName();
         String method = joinPoint.getSignature().getName();
 
         log.info("{} : {} : FAILED : User[{}] : From - {} : To - {} : Reason - {}", className, method,
                 userId,
-                dto.sourcePath(),
-                dto.targetPath(),
+                source,
+                target,
                 ex.toString());
     }
 
