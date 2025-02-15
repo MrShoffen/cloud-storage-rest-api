@@ -7,6 +7,7 @@ import io.minio.RemoveObjectsArgs;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.SneakyThrows;
+import org.mrshoffen.cloudstorage.storage.model.StorageObject;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +15,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Component;
 
 import java.io.*;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -27,6 +29,28 @@ public class MinioFolderOperations extends MinioOperations {
         super(bucketName, minioClient);
     }
 
+
+    @Override
+    public StorageObject objectStats(String fullPath) {
+        List<Item> items = findItemsWithPrefix(fullPath, true);
+
+        Long size = items.stream()
+                .map(Item::size)
+                .reduce(0L, Long::sum);
+
+        ZonedDateTime lastModified = items.stream()
+                .map(Item::lastModified)
+                .sorted(ZonedDateTime::compareTo)
+                .findFirst().get();
+
+        return StorageObject.builder()
+                .name(extractSimpleName(fullPath))
+                .path(extractRelativePath(fullPath))
+                .isFolder(true)
+                .size(size)
+                .lastModified(lastModified)
+                .build();
+    }
 
     @Override
     public void deleteObjectByPath(String path) {
@@ -93,8 +117,6 @@ public class MinioFolderOperations extends MinioOperations {
                             while ((len = inputStream.read(buffer)) > 0) {
                                 zipOut.write(buffer, 0, len);
                                 totalBytesWritten += len;
-                                // Логирование прогресса (опционально)
-                                System.out.println("Записано байт: " + totalBytesWritten);
                             }
 
                             zipOut.closeEntry();

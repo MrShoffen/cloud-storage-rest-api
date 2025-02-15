@@ -1,21 +1,15 @@
 package org.mrshoffen.cloudstorage.storage.controller;
 
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.MinioClient;
-import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
 import org.mrshoffen.cloudstorage.storage.model.dto.request.CopyMoveRequest;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
-import org.mrshoffen.cloudstorage.storage.service.PresignedCacheService;
 import org.mrshoffen.cloudstorage.storage.service.UserStorageService;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,41 +19,29 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
 @RequestMapping("/api/v1/files") //todo rename endpoint
 @RequiredArgsConstructor
-public class TestController {
-
-    @Value("${minio.bucket-name}")
-    private String bucket;
-
-    @Value("${minio.endpoint}")
-    private String url;
-
-    private final MinioClient minioClient;
+public class StorageController {
 
     private final UserStorageService userStorageService;
 
-    private final PresignedCacheService cacheService;
+    @GetMapping
+    public ResponseEntity<StorageObject> objectStats(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                     @RequestParam(value = "object", required = false) String object) {
+        StorageObject stats = userStorageService.getObjectStats(user.getId(), object);
+        return ResponseEntity.ok(stats);
+    }
 
     @SneakyThrows
     @GetMapping("/list")
     public ResponseEntity<List<StorageObject>> test(@AuthenticationPrincipal(expression = "getUser") User user,
                                                     @RequestParam(value = "folder") String folder) {
-//todo add validation
-
-        List<StorageObject> foldersAndFiles;
-        if (folder.isBlank()) {
-            foldersAndFiles = userStorageService.listObjectsInRootFolder(user.getId());
-        } else {
-            //todo remove over
-            foldersAndFiles = userStorageService.listObjectsInFolder(user.getId(), folder);
-        }
-        return ResponseEntity.ok(foldersAndFiles);
+        List<StorageObject> content = userStorageService.listObjectsInFolder(user.getId(), folder);
+        return ResponseEntity.ok(content);
     }
 
     @SneakyThrows
@@ -67,32 +49,7 @@ public class TestController {
     public String getObjectPreview(@AuthenticationPrincipal(expression = "getUser") User user,
                                    @RequestParam(value = "object") String objectPath) {
 
-        String userRootFolder = user.getId().toString() + "/";
-        String foldPath = userRootFolder + objectPath;
-
-        String cachedUrl = cacheService.getPresignedUrl(foldPath);
-
-
-        if (cachedUrl != null) {
-            return cachedUrl;
-        }
-
-        String presignedObjectUrl = minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                        .method(Method.GET)
-                        .bucket(bucket)
-                        .object(foldPath)
-                        .expiry(1, TimeUnit.HOURS) // Срок действия 1 час
-                        .build()
-        );
-
-        String pres = presignedObjectUrl
-                .replaceFirst(url, "")
-                .replaceFirst("/" + bucket + "/", "");
-
-        cacheService.savePresignedUrl(foldPath, pres, 3500);
-
-        return pres;
+        return userStorageService.getPreviewLink(user.getId(), objectPath);
     }
 
     @SneakyThrows
@@ -104,7 +61,6 @@ public class TestController {
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getNameForSave() + "\"");
-//        headers.setContentLength(resource.getSize());
 
         return ResponseEntity.ok()
                 .headers(headers)
@@ -148,7 +104,6 @@ public class TestController {
     public ResponseEntity<StorageOperationResponse> moveObject(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                @RequestBody CopyMoveRequest moveDto) {
         userStorageService.moveObject(user.getId(), moveDto);
-
         return ResponseEntity
                 .ok()
                 .body(

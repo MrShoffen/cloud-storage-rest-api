@@ -26,10 +26,16 @@ spring:
       max-file-size: 2048MB
       max-request-size: 2048MB
 
-
   profiles:
     active: restControllerSecurity
 #    active: filterSecurity
+
+logging:
+  pattern:
+    console: "[%d{dd.MM.yyyy HH:mm:ss}] - %msg%n"
+
+
+
 
 
 minio:
@@ -37,6 +43,7 @@ minio:
   endpoint: ${MINIO_URL}
   user: ${MINIO_ROOT_USER}
   password: ${MINIO_ROOT_PASSWORD}
+  presigned-timeout: 3600 #seconds
 
 
 #  session:

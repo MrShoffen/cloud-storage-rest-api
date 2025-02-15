@@ -2,16 +2,19 @@ package org.mrshoffen.cloudstorage.storage.minio;
 
 import io.minio.*;
 import io.minio.errors.*;
+import io.minio.http.Method;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.model.StorageObject;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.StreamSupport;
 
 @RequiredArgsConstructor
@@ -20,6 +23,9 @@ public abstract class MinioOperations {
     protected final String bucket;
 
     protected final MinioClient minioClient;
+
+    @Value("${minio.endpoint}")
+    private String endpoint;
 
     @SneakyThrows
     public void putObject(String path, InputStream stream, long size) {
@@ -32,6 +38,23 @@ public abstract class MinioOperations {
         );
     }
 
+    @SneakyThrows
+    public String getPresignedLink(String path, int timeout) {
+        String presignedObjectUrl = minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Method.GET)
+                        .bucket(bucket)
+                        .object(path)
+                        .expiry(timeout, TimeUnit.SECONDS)
+                        .build()
+        );
+
+        return presignedObjectUrl.replaceFirst(endpoint, "")
+                .replaceFirst("/" + bucket + "/", "");
+    }
+
+    public abstract StorageObject objectStats(String fullPath);
+
     public abstract void deleteObjectByPath(String path);
 
     public abstract void copyObject(String sourcePath, String targetPath);
@@ -40,21 +63,17 @@ public abstract class MinioOperations {
 
     public abstract boolean objectExists(String path);
 
-    public List<StorageObject> findObjectWithPrefix(String fullPathToFolder) {
+    public List<StorageObject> findObjectsWithPrefix(String fullPathToFolder) {
         List<Item> items = findItemsWithPrefix(fullPathToFolder, false);
 
         return items.stream()
-                .map(item -> {
-//                    Long size = getItemSize(item);
-
-                    return StorageObject.builder()
-                            .name(extractSimpleName(item.objectName()))
-                            .path(extractRelativePath(item.objectName()))
-                            .isFolder(item.isDir())
-                            .lastModified(item.lastModified())
-                            .size(item.size())
-                            .build();
-                })
+                .map(item -> StorageObject.builder()
+                        .name(extractSimpleName(item.objectName()))
+                        .path(extractRelativePath(item.objectName()))
+                        .isFolder(item.isDir())
+                        .lastModified(item.lastModified())
+                        .size(item.size())
+                        .build())
                 .toList();
 
     }
@@ -106,7 +125,7 @@ public abstract class MinioOperations {
         return fullPath.substring(lastSlashIndex + 1);
     }
 
-    private static String extractRelativePath(String fullPath) {
+    protected static String extractRelativePath(String fullPath) {
         int firstSlashIndex = fullPath.indexOf('/');
         return fullPath.substring(firstSlashIndex + 1);
     }

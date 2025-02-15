@@ -21,7 +21,22 @@ public class MinioRepository implements StorageObjectRepository {
     private final MinioOperationResolver operationResolver;
 
     @Override
-    public void uploadSingleObject(String objectPath, InputStream inputStream, long size, boolean overwrite) {
+    public String getLinkForObject(String objectPath, int timeout) {
+        MinioOperations operations = operationResolver.resolve(objectPath);
+
+        ensureObjectExists(objectPath, operations);
+
+        return operations.getPresignedLink(objectPath, timeout);
+    }
+
+    @Override
+    public StorageObject objectStats(String objectPath) {
+        return operationResolver.resolve(objectPath)
+                .objectStats(objectPath);
+    }
+
+    @Override
+    public void uploadObject(String objectPath, InputStream inputStream, long size, boolean overwrite) {
         MinioOperations operations = operationResolver.resolve(objectPath);
 
         if (!overwrite) {
@@ -35,7 +50,7 @@ public class MinioRepository implements StorageObjectRepository {
     @SneakyThrows
     public List<StorageObject> findAllObjectsInFolder(String path) {
         return operationResolver.resolve(path)
-                .findObjectWithPrefix(path);
+                .findObjectsWithPrefix(path);
     }
 
     @Override
