@@ -45,7 +45,7 @@ minio:
   password: ${MINIO_ROOT_PASSWORD}
   presigned-timeout: 3600 #seconds
   empty-folder-tag: "*empty-folder-tag*"
-  memory-per-user: 25 #MB
+  memory-per-user: 2048 #MB
 
 
 
