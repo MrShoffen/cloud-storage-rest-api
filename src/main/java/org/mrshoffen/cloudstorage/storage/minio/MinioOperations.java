@@ -27,6 +27,16 @@ public abstract class MinioOperations {
     @Value("${minio.endpoint}")
     private String endpoint;
 
+    public abstract StorageObjectResponse objectStats(String fullPath);
+
+    public abstract void deleteObjectByPath(String path);
+
+    public abstract void copyObject(String sourcePath, String targetPath);
+
+    public abstract InputStream readObject(String folderPath);
+
+    public abstract boolean objectExists(String path);
+
     @SneakyThrows
     public void putObject(String path, InputStream stream, long size) {
         minioClient.putObject(
@@ -52,16 +62,6 @@ public abstract class MinioOperations {
         return presignedObjectUrl.replaceFirst(endpoint, "")
                 .replaceFirst("/" + bucket + "/", "");
     }
-
-    public abstract StorageObjectResponse objectStats(String fullPath);
-
-    public abstract void deleteObjectByPath(String path);
-
-    public abstract void copyObject(String sourcePath, String targetPath);
-
-    public abstract InputStream readObject(String folderPath);
-
-    public abstract boolean objectExists(String path);
 
     public List<StorageObjectResponse> findObjectsWithPrefix(String fullPathToFolder) {
         List<Item> items = findItemsWithPrefix(fullPathToFolder, false);
