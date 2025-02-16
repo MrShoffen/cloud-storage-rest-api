@@ -60,7 +60,7 @@ bootJar {
 
 jib{
     to{
-        image = 'spring-boot-cloud-rest-api'
+        image = 'spring-boot-cloud-rest-api:1'
     }
 }
 
