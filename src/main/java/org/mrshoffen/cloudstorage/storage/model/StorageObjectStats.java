@@ -12,12 +12,10 @@ import java.time.ZonedDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class StorageObject {
-//todo add method for full information extraction
+public class StorageObjectStats {
     private String name;
     private String path;
     private Long size;
     ZonedDateTime lastModified;
     private boolean isFolder;
-
 }

@@ -1,6 +1,8 @@
 package org.mrshoffen.cloudstorage.storage.repository;
 
-import org.mrshoffen.cloudstorage.storage.model.StorageObject;
+import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
+import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
+import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 
 import java.io.InputStream;
@@ -8,20 +10,29 @@ import java.util.List;
 
 public interface StorageObjectRepository {
 
-    String getLinkForObject(String objectPath, int timeout);
+    String objectDownloadLink(String objectPath, int timeout)
+            throws StorageObjectNotFoundException;
 
-    StorageObject objectStats(String objectPath);
+    StorageObjectStats objectStats(String objectPath)
+            throws StorageObjectNotFoundException;
 
-    void uploadObject(String objectPath, InputStream inputStream, long size, boolean overwrite);
+    void forceUpload(String objectPath, InputStream inputStream, long size);
 
-    List<StorageObject> findAllObjectsInFolder(String path);
+    void safeUpload(String objectPath, InputStream inputStream, long size)
+            throws StorageObjectAlreadyExistsException;
 
-    StorageObjectResourceDto getObject(String path);
+    List<StorageObjectStats> allObjectsInFolder(String path);
 
-    void copyObject(String sourcePath, String targetPath);
+    StorageObjectResourceDto getAsResource(String path)
+            throws StorageObjectNotFoundException;
 
-    void deleteObject(String deletePath);
+    void copy(String sourcePath, String targetPath)
+            throws StorageObjectNotFoundException, StorageObjectAlreadyExistsException;
 
-    void moveObject(String sourcePath, String targetPath);
+    void delete(String deletePath)
+            throws StorageObjectNotFoundException;
+
+    void move(String sourcePath, String targetPath)
+            throws StorageObjectNotFoundException, StorageObjectAlreadyExistsException;
 
 }

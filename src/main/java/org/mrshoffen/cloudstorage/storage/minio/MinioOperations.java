@@ -6,7 +6,7 @@ import io.minio.http.Method;
 import io.minio.messages.Item;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.model.StorageObject;
+import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
@@ -53,7 +53,7 @@ public abstract class MinioOperations {
                 .replaceFirst("/" + bucket + "/", "");
     }
 
-    public abstract StorageObject objectStats(String fullPath);
+    public abstract StorageObjectStats objectStats(String fullPath);
 
     public abstract void deleteObjectByPath(String path);
 
@@ -63,11 +63,11 @@ public abstract class MinioOperations {
 
     public abstract boolean objectExists(String path);
 
-    public List<StorageObject> findObjectsWithPrefix(String fullPathToFolder) {
+    public List<StorageObjectStats> findObjectsWithPrefix(String fullPathToFolder) {
         List<Item> items = findItemsWithPrefix(fullPathToFolder, false);
 
         return items.stream()
-                .map(item -> StorageObject.builder()
+                .map(item -> StorageObjectStats.builder()
                         .name(extractSimpleName(item.objectName()))
                         .path(extractRelativePath(item.objectName()))
                         .isFolder(item.isDir())

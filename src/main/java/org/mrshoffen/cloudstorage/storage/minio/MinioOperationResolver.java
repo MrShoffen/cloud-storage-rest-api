@@ -8,20 +8,20 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MinioOperationResolver {
 
-    private final MinioFolderOperations minioFolderService;
-    private final MinioFileOperations minioFileService;
+    private final MinioFolderOperations minioFolderOperations;
+    private final MinioFileOperations minioFileOperations;
 
 
     public MinioOperations resolve(String sourcePath) {
         if (isFolderPath(sourcePath)) {
-            return minioFolderService;
+            return minioFolderOperations;
         } else {
-            return minioFileService;
+            return minioFileOperations;
         }
     }
 
     public MinioOperations any(){
-        return minioFileService;
+        return minioFileOperations;
     }
 
     static boolean isFolderPath(String fullTargetPath) {

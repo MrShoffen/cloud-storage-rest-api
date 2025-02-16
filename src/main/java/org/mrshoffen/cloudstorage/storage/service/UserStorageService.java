@@ -4,7 +4,7 @@ package org.mrshoffen.cloudstorage.storage.service;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
-import org.mrshoffen.cloudstorage.storage.model.StorageObject;
+import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
 import org.mrshoffen.cloudstorage.storage.repository.StorageObjectRepository;
@@ -41,52 +41,52 @@ public class UserStorageService {
             return cachedLink;
         }
 
-        String presLink = repository.getLinkForObject(fullPath, presignedLinkTimeout);
+        String presLink = repository.objectDownloadLink(fullPath, presignedLinkTimeout);
 
         cacheService.savePresignedUrl(fullPath, presLink, presignedLinkTimeout);
 
         return presLink;
     }
 
-    public StorageObject getObjectStats(Long userId, String objectPath) {
+    public StorageObjectStats getObjectStats(Long userId, String objectPath) {
         String fullPathToObject = getFullPath(userId, objectPath);
         return repository.objectStats(fullPathToObject);
     }
 
     @SneakyThrows
-    public List<StorageObject> listObjectsInFolder(Long userId, String folderPath) {
+    public List<StorageObjectStats> listObjectsInFolder(Long userId, String folderPath) {
         String fullPathToFolder = getFullPath(userId, folderPath);
-        return repository.findAllObjectsInFolder(fullPathToFolder);
+        return repository.allObjectsInFolder(fullPathToFolder);
     }
 
     public StorageObjectResourceDto downloadObject(Long userId, String objectPath) {
         String fullObjectPath = getFullPath(userId, objectPath);
-        return repository.getObject(fullObjectPath);
+        return repository.getAsResource(fullObjectPath);
     }
 
     public void copyObject(Long userId, String from, String to) {
         String fullSourcePath = getFullPath(userId, from);
         String fullTargetPath = getFullPath(userId, to);
-        repository.copyObject(fullSourcePath, fullTargetPath);
+        repository.copy(fullSourcePath, fullTargetPath);
     }
 
     @SneakyThrows
     public void deleteObject(Long userId, String deletePath) {
         String fullDeletePath = getFullPath(userId, deletePath);
-        repository.deleteObject(fullDeletePath);
+        repository.delete(fullDeletePath);
     }
 
     @SneakyThrows
     public void moveObject(Long userId, String from, String to) {
         String fullSourcePath = getFullPath(userId, from);
         String fullTargetPath = getFullPath(userId, to);
-        repository.moveObject(fullSourcePath, fullTargetPath);
+        repository.move(fullSourcePath, fullTargetPath);
     }
 
     public void createFolder(Long userId, String folderPath) {
         String emptyFolderTagPath = getFullPath(userId, folderPath) + emptyFolderTag;
         try {
-            repository.uploadObject(emptyFolderTagPath, new ByteArrayInputStream(new byte[0]), 0, false);
+            repository.safeUpload(emptyFolderTagPath, new ByteArrayInputStream(new byte[0]), 0);
         } catch (StorageObjectAlreadyExistsException e) {
             throw new StorageObjectAlreadyExistsException("Папка '%s' уже существует в целевой директории".formatted(folderPath));
         }
@@ -134,10 +134,7 @@ public class UserStorageService {
         //создание пустых тегов у подпапок
         for (String subFolder : allSubFolders) {
             String subfolderEmptyTag = fullPathToTargetFolder + subFolder + emptyFolderTag;
-            repository.uploadObject(subfolderEmptyTag,
-                    new ByteArrayInputStream(new byte[0]),
-                    0,
-                    true);
+            repository.forceUpload(subfolderEmptyTag, new ByteArrayInputStream(new byte[0]), 0);
         }
 
         return responseList;
@@ -148,7 +145,7 @@ public class UserStorageService {
     private StorageOperationResponse uploadFile(MultipartFile file, String fullPathToFolder, String folder) {
         try (InputStream stream = file.getInputStream()) {
             String objectPath = fullPathToFolder + file.getOriginalFilename();
-            repository.uploadObject(objectPath, stream, file.getSize(), false);
+            repository.safeUpload(objectPath, stream, file.getSize());
 
             return StorageOperationResponse.builder()
                     .status(CREATED.value())
@@ -169,7 +166,7 @@ public class UserStorageService {
     @SneakyThrows
     private StorageOperationResponse uploadFolder(List<MultipartFile> innerFolder, String baseFolder, String innerFolderName, String fullPathToFolder) {
 
-        List<StorageObject> allObjectsInFolder = repository.findAllObjectsInFolder(fullPathToFolder + innerFolderName);
+        List<StorageObjectStats> allObjectsInFolder = repository.allObjectsInFolder(fullPathToFolder + innerFolderName);
         if (!allObjectsInFolder.isEmpty()) {
             return StorageOperationResponse.builder()
                     .status(CONFLICT.value())
@@ -181,10 +178,7 @@ public class UserStorageService {
 
         for (MultipartFile file : innerFolder) {
             try (InputStream stream = file.getInputStream()) {
-                repository.uploadObject(
-                        fullPathToFolder + file.getOriginalFilename(),
-                        stream,
-                        file.getSize(), true);
+                repository.forceUpload(fullPathToFolder + file.getOriginalFilename(), stream, file.getSize());
             }
         }
         return StorageOperationResponse.builder()

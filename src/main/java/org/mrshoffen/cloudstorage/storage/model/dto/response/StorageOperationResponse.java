@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 @Builder
 
 public class StorageOperationResponse {
-
     private String title;
     private int status;
     private String detail;
