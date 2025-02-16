@@ -6,6 +6,7 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -17,14 +18,15 @@ import java.util.stream.Collectors;
 @Slf4j
 public class LoggingStorageServiceAspect {
 
-    @Pointcut("execution(* org.mrshoffen.cloudstorage.storage.service.UserStorageService.*(Long,String))")
+    @Pointcut("execution(* org.mrshoffen.cloudstorage.storage.service.UserStorageService.*(*,String))")
     public void storageOperationsWithTwoArgs() {
     }
 
     @AfterReturning(value = "storageOperationsWithTwoArgs()", returning = "resource")
     public void afterReturningTwoArgsMethod(JoinPoint joinPoint, Object resource) {
         Object[] args = joinPoint.getArgs();
-        Long userId = (Long) args[0];
+        User user = (User) args[0];
+        Long userId = user.getId();
         String requestPath = (String) args[1];
 
         String className = joinPoint.getTarget().getClass().getSimpleName();
@@ -39,7 +41,8 @@ public class LoggingStorageServiceAspect {
     @AfterThrowing(value = "storageOperationsWithTwoArgs()", throwing = "ex")
     public void afterFailTwoArgsMethod(JoinPoint joinPoint, Exception ex) {
         Object[] args = joinPoint.getArgs();
-        Long userId = (Long) args[0];
+        User user = (User) args[0];
+        Long userId = user.getId();
         String requestPath = (String) args[1];
 
         String className = joinPoint.getTarget().getClass().getSimpleName();
@@ -51,14 +54,15 @@ public class LoggingStorageServiceAspect {
                 ex.toString());
     }
 
-    @Pointcut("execution(* org.mrshoffen.cloudstorage.storage.service.UserStorageService.*(Long, String, String))")
+    @Pointcut("execution(* org.mrshoffen.cloudstorage.storage.service.UserStorageService.*(*, String, String))")
     public void storageOperationsWithCopyDto() {
     }
 
     @AfterReturning(value = "storageOperationsWithCopyDto()")
     public void afterReturningCopyDtoMethod(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
-        Long userId = (Long) args[0];
+        User user = (User) args[0];
+        Long userId = user.getId();
         String source = (String) args[1];
         String target = (String) args[2];
 
@@ -74,7 +78,8 @@ public class LoggingStorageServiceAspect {
     @AfterThrowing(value = "storageOperationsWithCopyDto()", throwing = "ex")
     public void afterFailCopyDtoMethod(JoinPoint joinPoint, Exception ex) {
         Object[] args = joinPoint.getArgs();
-        Long userId = (Long) args[0];
+        User user = (User) args[0];
+        Long userId = user.getId();
         String source = (String) args[1];
         String target = (String) args[2];
 
@@ -88,14 +93,15 @@ public class LoggingStorageServiceAspect {
                 ex.toString());
     }
 
-    @Pointcut("execution(* org.mrshoffen.cloudstorage.storage.service.UserStorageService.uploadObjectsToFolder(Long, *, *))")
+    @Pointcut("execution(* org.mrshoffen.cloudstorage.storage.service.UserStorageService.uploadObjectsToFolder(*, *, String))")
     public void uploadOperation() {
     }
 
     @AfterReturning(value = "uploadOperation()", returning = "response")
     public void afterReturningUploadMethod(JoinPoint joinPoint, Object response) {
         Object[] args = joinPoint.getArgs();
-        Long userId = (Long) args[0];
+        User user = (User) args[0];
+        Long userId = user.getId();
         List<MultipartFile> files = (List<MultipartFile>) args[1];
         String targetFolder = (String) args[2];
 
@@ -111,10 +117,11 @@ public class LoggingStorageServiceAspect {
 
     }
 
-    @AfterThrowing(value = "uploadOperation()",throwing = "ex")
+    @AfterThrowing(value = "uploadOperation()", throwing = "ex")
     public void afterFailUploadMethod(JoinPoint joinPoint, Exception ex) {
         Object[] args = joinPoint.getArgs();
-        Long userId = (Long) args[0];
+        User user = (User) args[0];
+        Long userId = user.getId();
         List<MultipartFile> files = (List<MultipartFile>) args[1];
         String targetFolder = (String) args[2];
 

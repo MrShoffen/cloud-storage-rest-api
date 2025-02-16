@@ -5,11 +5,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
-import org.mrshoffen.cloudstorage.storage.exception.StorageQuotaExceededException;
+import org.mrshoffen.cloudstorage.storage.exception.UserStorageCapacityExceeded;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
 import org.mrshoffen.cloudstorage.storage.repository.StorageObjectRepository;
+import org.mrshoffen.cloudstorage.user.model.entity.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,11 +36,8 @@ public class UserStorageService {
     @Value("${minio.empty-folder-tag}")
     private String emptyFolderTag;
 
-    @Value("${minio.memory-per-user}")
-    private long userStorageCapacity;
-
-    public String getPreviewLink(Long userId, String objectPath) {
-        String fullPath = getFullPath(userId, objectPath);
+    public String getPreviewLink(User user, String objectPath) {
+        String fullPath = getFullPath(user, objectPath);
 
         String cachedLink = cacheService.getPresignedUrl(fullPath);
         if (cachedLink != null) {
@@ -53,48 +51,49 @@ public class UserStorageService {
         return presLink;
     }
 
-    public StorageObjectResponse getObjectStats(Long userId, String objectPath) {
-        String fullPathToObject = getFullPath(userId, objectPath);
+    public StorageObjectResponse getObjectStats(User user, String objectPath) {
+        String fullPathToObject = getFullPath(user, objectPath);
         return repository.objectStats(fullPathToObject)
                 .orElseThrow(() -> new StorageObjectNotFoundException("'%s' не существует в исходной папке"
                         .formatted(objectPath)));
     }
 
     @SneakyThrows
-    public List<StorageObjectResponse> listObjectsInFolder(Long userId, String folderPath) {
-        String fullPathToFolder = getFullPath(userId, folderPath);
+    public List<StorageObjectResponse> listObjectsInFolder(User user, String folderPath) {
+        String fullPathToFolder = getFullPath(user, folderPath);
         return repository.allObjectsInFolder(fullPathToFolder);
     }
 
-    public StorageObjectResourceDto downloadObject(Long userId, String objectPath) {
-        String fullObjectPath = getFullPath(userId, objectPath);
+    public StorageObjectResourceDto downloadObject(User user, String objectPath) {
+        String fullObjectPath = getFullPath(user, objectPath);
         return repository.getAsResource(fullObjectPath);
     }
 
-    public void copyObject(Long userId, String from, String to) {
-        if (getUsedMemory(userId) > userStorageCapacity * 1024 * 1024) {
-            throw new StorageQuotaExceededException("Исчерпан лимит хранилища %d MB".formatted(userStorageCapacity));
+    public void copyObject(User user, String from, String to) {
+        if (getUsedMemory(user) > user.getStoragePlan().getCapacity() * 1024 * 1024 * 1024) {
+            throw new UserStorageCapacityExceeded("Исчерпан лимит хранилища %d MB"
+                    .formatted(user.getStoragePlan().getCapacity()));
         }
-        String fullSourcePath = getFullPath(userId, from);
-        String fullTargetPath = getFullPath(userId, to);
+        String fullSourcePath = getFullPath(user, from);
+        String fullTargetPath = getFullPath(user, to);
         repository.copy(fullSourcePath, fullTargetPath);
     }
 
     @SneakyThrows
-    public void deleteObject(Long userId, String deletePath) {
-        String fullDeletePath = getFullPath(userId, deletePath);
+    public void deleteObject(User user, String deletePath) {
+        String fullDeletePath = getFullPath(user, deletePath);
         repository.delete(fullDeletePath);
     }
 
     @SneakyThrows
-    public void moveObject(Long userId, String from, String to) {
-        String fullSourcePath = getFullPath(userId, from);
-        String fullTargetPath = getFullPath(userId, to);
+    public void moveObject(User user, String from, String to) {
+        String fullSourcePath = getFullPath(user, from);
+        String fullTargetPath = getFullPath(user, to);
         repository.move(fullSourcePath, fullTargetPath);
     }
 
-    public void createFolder(Long userId, String folderPath) {
-        String emptyFolderTagPath = getFullPath(userId, folderPath) + emptyFolderTag;
+    public void createFolder(User user, String folderPath) {
+        String emptyFolderTagPath = getFullPath(user, folderPath) + emptyFolderTag;
         try {
             repository.safeUpload(emptyFolderTagPath, new ByteArrayInputStream(new byte[0]), 0);
         } catch (StorageObjectAlreadyExistsException e) {
@@ -103,13 +102,13 @@ public class UserStorageService {
     }
 
     @SneakyThrows
-    public List<StorageOperationResponse> uploadObjectsToFolder(Long userId, List<MultipartFile> files, String targetFolder) {
-        String fullPathToTargetFolder = getFullPath(userId, targetFolder);
-
+    public List<StorageOperationResponse> uploadObjectsToFolder(User user, List<MultipartFile> files, String targetFolder) {
+        String fullPathToTargetFolder = getFullPath(user, targetFolder);
 
         long sizeForUpload = files.stream().map(MultipartFile::getSize).reduce(0L, Long::sum);
-        if (getUsedMemory(userId) + sizeForUpload > userStorageCapacity * 1024 * 1024) {
-            throw new StorageQuotaExceededException("Исчерпан лимит хранилища %d MB".formatted(userStorageCapacity));
+        if (getUsedMemory(user) + sizeForUpload > user.getStoragePlan().getCapacity() * 1024 * 1024 * 1024) {
+            throw new UserStorageCapacityExceeded("Исчерпан лимит хранилища %d MB"
+                    .formatted(user.getStoragePlan().getCapacity()));
         }
 
         //парсинг файлов и папок для загрузки
@@ -205,8 +204,8 @@ public class UserStorageService {
                 .build();
     }
 
-    private long getUsedMemory(Long userId) {
-        return repository.objectStats(userId.toString() + "/")
+    private long getUsedMemory(User user) {
+        return repository.objectStats(user.getId().toString() + "/")
                 .map(StorageObjectResponse::getSize)
                 .orElse(0L);
     }
@@ -225,7 +224,7 @@ public class UserStorageService {
         return subPaths;
     }
 
-    private static String getFullPath(Long userId, String folderPath) {
-        return userId.toString() + "/" + (folderPath == null ? "" : folderPath);
+    private static String getFullPath(User user, String folderPath) {
+        return user.getId().toString() + "/" + (folderPath == null ? "" : folderPath);
     }
 }

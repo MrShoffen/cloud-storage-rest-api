@@ -24,4 +24,8 @@ public class User implements Serializable {
 
     @Column(name = "avatar_url")
     private String avatarUrl;
+
+    @Column(name = "storage_plan")
+    @Enumerated(EnumType.STRING)
+    private StoragePlan storagePlan = StoragePlan.BASIC;
 }

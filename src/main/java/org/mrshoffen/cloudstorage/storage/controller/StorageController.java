@@ -2,8 +2,8 @@ package org.mrshoffen.cloudstorage.storage.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
 import org.mrshoffen.cloudstorage.storage.service.UserStorageService;
 import org.mrshoffen.cloudstorage.user.model.entity.User;
@@ -31,7 +31,7 @@ public class StorageController {
     @GetMapping
     public ResponseEntity<StorageObjectResponse> getObjectStats(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                 @RequestParam(value = "path") String object) {
-        StorageObjectResponse stats = userStorageService.getObjectStats(user.getId(), object);
+        StorageObjectResponse stats = userStorageService.getObjectStats(user, object);
         return ResponseEntity.ok(stats);
     }
 
@@ -39,7 +39,7 @@ public class StorageController {
     public ResponseEntity<StorageOperationResponse> createFolder(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                  @RequestParam(value = "path") String folderPath) {
 
-        userStorageService.createFolder(user.getId(), folderPath);
+        userStorageService.createFolder(user, folderPath);
 
         return ResponseEntity
                 .created(
@@ -61,7 +61,7 @@ public class StorageController {
     @GetMapping("/files")
     public ResponseEntity<List<StorageObjectResponse>> getObjectsInFolder(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                           @RequestParam(value = "path") String folderPath) {
-        List<StorageObjectResponse> content = userStorageService.listObjectsInFolder(user.getId(), folderPath);
+        List<StorageObjectResponse> content = userStorageService.listObjectsInFolder(user, folderPath);
         return ResponseEntity.ok(content);
     }
 
@@ -70,7 +70,7 @@ public class StorageController {
     public String getObjectPreview(@AuthenticationPrincipal(expression = "getUser") User user,
                                    @RequestParam(value = "path") String objectPath) {
 
-        return userStorageService.getPreviewLink(user.getId(), objectPath);
+        return userStorageService.getPreviewLink(user, objectPath);
     }
 
     @SneakyThrows
@@ -78,7 +78,7 @@ public class StorageController {
     public ResponseEntity<Resource> downloadObject(@AuthenticationPrincipal(expression = "getUser") User user,
                                                    @RequestParam(value = "path") String objectPath) {
 
-        StorageObjectResourceDto resource = userStorageService.downloadObject(user.getId(), objectPath);
+        StorageObjectResourceDto resource = userStorageService.downloadObject(user, objectPath);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getNameForSave() + "\"");
@@ -93,7 +93,7 @@ public class StorageController {
     public ResponseEntity<List<StorageOperationResponse>> uploadObject(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                        @RequestPart(name = "object") List<MultipartFile> files,
                                                                        @RequestParam(value = "path") String folder) {
-        List<StorageOperationResponse> response = userStorageService.uploadObjectsToFolder(user.getId(), files, folder);
+        List<StorageOperationResponse> response = userStorageService.uploadObjectsToFolder(user, files, folder);
         return ResponseEntity.status(MULTI_STATUS)
                 .body(response);
     }
@@ -102,7 +102,7 @@ public class StorageController {
     public ResponseEntity<StorageOperationResponse> copyObject(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                @RequestParam(value = "from") String source,
                                                                @RequestParam(value = "path") String target) {
-        userStorageService.copyObject(user.getId(), source, target);
+        userStorageService.copyObject(user, source, target);
 
         return ResponseEntity
                 .created(
@@ -124,7 +124,7 @@ public class StorageController {
     public ResponseEntity<StorageOperationResponse> moveObject(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                @RequestParam(value = "from") String source,
                                                                @RequestParam(value = "path") String target) {
-        userStorageService.moveObject(user.getId(), source, target);
+        userStorageService.moveObject(user, source, target);
         return ResponseEntity
                 .created(
                         UriComponentsBuilder
@@ -145,7 +145,7 @@ public class StorageController {
     public ResponseEntity<StorageOperationResponse> deleteObject(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                  @RequestParam(value = "path") String objectPath) {
 
-        userStorageService.deleteObject(user.getId(), objectPath);
+        userStorageService.deleteObject(user, objectPath);
         return ResponseEntity
                 .ok()
                 .body(
