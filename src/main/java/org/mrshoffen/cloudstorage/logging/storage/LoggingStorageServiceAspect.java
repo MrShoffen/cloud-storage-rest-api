@@ -111,4 +111,23 @@ public class LoggingStorageServiceAspect {
 
     }
 
+    @AfterThrowing(value = "uploadOperation()",throwing = "ex")
+    public void afterFailUploadMethod(JoinPoint joinPoint, Exception ex) {
+        Object[] args = joinPoint.getArgs();
+        Long userId = (Long) args[0];
+        List<MultipartFile> files = (List<MultipartFile>) args[1];
+        String targetFolder = (String) args[2];
+
+        String className = joinPoint.getTarget().getClass().getSimpleName();
+        String method = joinPoint.getSignature().getName();
+
+        log.info("{} : {} : UPLOAD FAILED : User[{}] : Target folder - {} \n -> Input files:\n   {} \n -> Reason - {}", className, method,
+                userId,
+                targetFolder,
+                files.stream().map(MultipartFile::getOriginalFilename).collect(Collectors.joining("\n   ")),
+                ex.toString()
+        );
+
+    }
+
 }

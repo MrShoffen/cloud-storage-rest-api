@@ -27,7 +27,6 @@ public class MinioFolderOperations extends MinioOperations {
         super(bucketName, minioClient);
     }
 
-
     @Override
     public StorageObjectStats objectStats(String fullPath) {
         List<Item> items = findItemsWithPrefix(fullPath, true);
@@ -104,7 +103,6 @@ public class MinioFolderOperations extends MinioOperations {
                     List<String> objectNames = findItemsWithPrefix(downloadPath, true).stream()
                             .map(Item::objectName).toList();
 
-                    long totalBytesWritten = 0;
                     for (String objectName : objectNames) {
                         try (InputStream inputStream = getFileStream(objectName)) {
                             ZipEntry zipEntry = new ZipEntry(objectName.replace(downloadPath, ""));
@@ -114,7 +112,6 @@ public class MinioFolderOperations extends MinioOperations {
                             int len;
                             while ((len = inputStream.read(buffer)) > 0) {
                                 zipOut.write(buffer, 0, len);
-                                totalBytesWritten += len;
                             }
 
                             zipOut.closeEntry();

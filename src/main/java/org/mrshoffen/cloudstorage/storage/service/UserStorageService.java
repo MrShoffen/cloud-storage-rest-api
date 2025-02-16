@@ -4,6 +4,8 @@ package org.mrshoffen.cloudstorage.storage.service;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
+import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
+import org.mrshoffen.cloudstorage.storage.exception.StorageQuotaExceededException;
 import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
@@ -33,6 +35,9 @@ public class UserStorageService {
     @Value("${minio.empty-folder-tag}")
     private String emptyFolderTag;
 
+    @Value("${minio.memory-per-user}")
+    private long userStorageCapacity;
+
     public String getPreviewLink(Long userId, String objectPath) {
         String fullPath = getFullPath(userId, objectPath);
 
@@ -50,7 +55,9 @@ public class UserStorageService {
 
     public StorageObjectStats getObjectStats(Long userId, String objectPath) {
         String fullPathToObject = getFullPath(userId, objectPath);
-        return repository.objectStats(fullPathToObject);
+        return repository.objectStats(fullPathToObject)
+                .orElseThrow(() -> new StorageObjectNotFoundException("'%s' не существует в исходной папке"
+                        .formatted(objectPath)));
     }
 
     @SneakyThrows
@@ -65,6 +72,9 @@ public class UserStorageService {
     }
 
     public void copyObject(Long userId, String from, String to) {
+        if (getUsedMemory(userId) > userStorageCapacity * 1024 * 1024) {
+            throw new StorageQuotaExceededException("Исчерпан лимит хранилища %d MB".formatted(userStorageCapacity));
+        }
         String fullSourcePath = getFullPath(userId, from);
         String fullTargetPath = getFullPath(userId, to);
         repository.copy(fullSourcePath, fullTargetPath);
@@ -95,6 +105,12 @@ public class UserStorageService {
     @SneakyThrows
     public List<StorageOperationResponse> uploadObjectsToFolder(Long userId, List<MultipartFile> files, String targetFolder) {
         String fullPathToTargetFolder = getFullPath(userId, targetFolder);
+
+
+        long sizeForUpload = files.stream().map(MultipartFile::getSize).reduce(0L, Long::sum);
+        if (getUsedMemory(userId) + sizeForUpload > userStorageCapacity * 1024 * 1024) {
+            throw new StorageQuotaExceededException("Исчерпан лимит хранилища %d MB".formatted(userStorageCapacity));
+        }
 
         //парсинг файлов и папок для загрузки
         Map<String, List<MultipartFile>> innerFolders = new HashMap<>();
@@ -189,8 +205,13 @@ public class UserStorageService {
                 .build();
     }
 
+    private long getUsedMemory(Long userId) {
+        return repository.objectStats(userId.toString() + "/")
+                .map(StorageObjectStats::getSize)
+                .orElse(0L);
+    }
 
-    public Set<String> getAllSubPaths(String path) {
+    private static Set<String> getAllSubPaths(String path) {
         Set<String> subPaths = new HashSet<>();
         StringBuilder currentPath = new StringBuilder();
 

@@ -7,13 +7,14 @@ import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResour
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
 public interface StorageObjectRepository {
 
     String objectDownloadLink(String objectPath, int timeout)
             throws StorageObjectNotFoundException;
 
-    StorageObjectStats objectStats(String objectPath)
+    Optional<StorageObjectStats> objectStats(String objectPath)
             throws StorageObjectNotFoundException;
 
     void forceUpload(String objectPath, InputStream inputStream, long size);

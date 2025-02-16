@@ -1,5 +1,7 @@
 package org.mrshoffen.cloudstorage.storage.repository;
 
+import io.minio.errors.ErrorResponseException;
+import io.minio.errors.MinioException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Repository;
 
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -30,9 +33,14 @@ public class MinioRepository implements StorageObjectRepository {
     }
 
     @Override
-    public StorageObjectStats objectStats(String objectPath) throws StorageObjectNotFoundException {
-        return operationResolver.resolve(objectPath)
-                .objectStats(objectPath);
+    public Optional<StorageObjectStats> objectStats(String objectPath) throws StorageObjectNotFoundException {
+        try {
+            StorageObjectStats storageObjectStats = operationResolver.resolve(objectPath)
+                    .objectStats(objectPath);
+            return Optional.of(storageObjectStats);
+        } catch (Exception e) {
+            return Optional.empty();
+        }
     }
 
     @Override
