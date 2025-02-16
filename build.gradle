@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.4.1'
     id 'io.spring.dependency-management' version '1.1.7'
+    id "com.google.cloud.tools.jib" version "3.4.4"
 }
 
 group = 'org.mrshoffen'
@@ -24,27 +25,20 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
 
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
-
     implementation 'org.springframework.session:spring-session-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-//    implementation 'org.springframework.session:spring-session-core'
-
-
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.liquibase:liquibase-core'
 
-
-    // https://mvnrepository.com/artifact/io.minio/minio
     implementation 'io.minio:minio:8.5.17'
-
 
 
     compileOnly 'org.projectlombok:lombok'
@@ -53,6 +47,8 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.6.3'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.3'
 
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
@@ -60,6 +56,12 @@ dependencies {
 
 bootJar {
     archiveFileName = 'cloud-rest-api.jar'
+}
+
+jib{
+    to{
+        image = 'spring-boot-cloud-rest-api'
+    }
 }
 
 tasks.named('test') {

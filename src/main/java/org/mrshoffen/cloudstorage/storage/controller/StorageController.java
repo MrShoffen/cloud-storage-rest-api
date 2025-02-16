@@ -2,7 +2,7 @@ package org.mrshoffen.cloudstorage.storage.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
 import org.mrshoffen.cloudstorage.storage.service.UserStorageService;
@@ -29,9 +29,9 @@ public class StorageController {
     private final UserStorageService userStorageService;
 
     @GetMapping
-    public ResponseEntity<StorageObjectStats> getObjectStats(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                             @RequestParam(value = "path") String object) {
-        StorageObjectStats stats = userStorageService.getObjectStats(user.getId(), object);
+    public ResponseEntity<StorageObjectResponse> getObjectStats(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                @RequestParam(value = "path") String object) {
+        StorageObjectResponse stats = userStorageService.getObjectStats(user.getId(), object);
         return ResponseEntity.ok(stats);
     }
 
@@ -59,9 +59,9 @@ public class StorageController {
 
     @SneakyThrows
     @GetMapping("/files")
-    public ResponseEntity<List<StorageObjectStats>> getObjectsInFolder(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                                       @RequestParam(value = "path") String folderPath) {
-        List<StorageObjectStats> content = userStorageService.listObjectsInFolder(user.getId(), folderPath);
+    public ResponseEntity<List<StorageObjectResponse>> getObjectsInFolder(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                          @RequestParam(value = "path") String folderPath) {
+        List<StorageObjectResponse> content = userStorageService.listObjectsInFolder(user.getId(), folderPath);
         return ResponseEntity.ok(content);
     }
 

@@ -7,7 +7,7 @@ import io.minio.RemoveObjectsArgs;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -28,7 +28,7 @@ public class MinioFolderOperations extends MinioOperations {
     }
 
     @Override
-    public StorageObjectStats objectStats(String fullPath) {
+    public StorageObjectResponse objectStats(String fullPath) {
         List<Item> items = findItemsWithPrefix(fullPath, true);
 
         Long size = items.stream()
@@ -40,7 +40,7 @@ public class MinioFolderOperations extends MinioOperations {
                 .sorted(ZonedDateTime::compareTo)
                 .findFirst().get();
 
-        return StorageObjectStats.builder()
+        return StorageObjectResponse.builder()
                 .name(extractSimpleName(fullPath))
                 .path(extractRelativePath(fullPath))
                 .isFolder(true)

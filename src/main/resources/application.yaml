@@ -34,10 +34,6 @@ logging:
   pattern:
     console: "[%d{dd.MM.yyyy HH:mm:ss}] - %msg%n"
 
-
-
-
-
 minio:
   bucket-name: user-files
   endpoint: ${MINIO_URL}
@@ -46,10 +42,3 @@ minio:
   presigned-timeout: 3600 #seconds
   empty-folder-tag: "*empty-folder-tag*"
   memory-per-user: 2048 #MB
-
-
-
-#  session:
-#    redis:
-#      repository-type: indexed
-

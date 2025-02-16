@@ -6,7 +6,7 @@ import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageQuotaExceededException;
-import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageOperationResponse;
 import org.mrshoffen.cloudstorage.storage.repository.StorageObjectRepository;
@@ -53,7 +53,7 @@ public class UserStorageService {
         return presLink;
     }
 
-    public StorageObjectStats getObjectStats(Long userId, String objectPath) {
+    public StorageObjectResponse getObjectStats(Long userId, String objectPath) {
         String fullPathToObject = getFullPath(userId, objectPath);
         return repository.objectStats(fullPathToObject)
                 .orElseThrow(() -> new StorageObjectNotFoundException("'%s' не существует в исходной папке"
@@ -61,7 +61,7 @@ public class UserStorageService {
     }
 
     @SneakyThrows
-    public List<StorageObjectStats> listObjectsInFolder(Long userId, String folderPath) {
+    public List<StorageObjectResponse> listObjectsInFolder(Long userId, String folderPath) {
         String fullPathToFolder = getFullPath(userId, folderPath);
         return repository.allObjectsInFolder(fullPathToFolder);
     }
@@ -182,7 +182,7 @@ public class UserStorageService {
     @SneakyThrows
     private StorageOperationResponse uploadFolder(List<MultipartFile> innerFolder, String baseFolder, String innerFolderName, String fullPathToFolder) {
 
-        List<StorageObjectStats> allObjectsInFolder = repository.allObjectsInFolder(fullPathToFolder + innerFolderName);
+        List<StorageObjectResponse> allObjectsInFolder = repository.allObjectsInFolder(fullPathToFolder + innerFolderName);
         if (!allObjectsInFolder.isEmpty()) {
             return StorageOperationResponse.builder()
                     .status(CONFLICT.value())
@@ -207,7 +207,7 @@ public class UserStorageService {
 
     private long getUsedMemory(Long userId) {
         return repository.objectStats(userId.toString() + "/")
-                .map(StorageObjectStats::getSize)
+                .map(StorageObjectResponse::getSize)
                 .orElse(0L);
     }
 

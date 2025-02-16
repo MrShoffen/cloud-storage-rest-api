@@ -1,10 +1,8 @@
 package org.mrshoffen.cloudstorage.storage.repository;
 
-import io.minio.errors.ErrorResponseException;
-import io.minio.errors.MinioException;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
@@ -33,11 +31,11 @@ public class MinioRepository implements StorageObjectRepository {
     }
 
     @Override
-    public Optional<StorageObjectStats> objectStats(String objectPath) throws StorageObjectNotFoundException {
+    public Optional<StorageObjectResponse> objectStats(String objectPath) throws StorageObjectNotFoundException {
         try {
-            StorageObjectStats storageObjectStats = operationResolver.resolve(objectPath)
+            StorageObjectResponse storageObjectResponse = operationResolver.resolve(objectPath)
                     .objectStats(objectPath);
-            return Optional.of(storageObjectStats);
+            return Optional.of(storageObjectResponse);
         } catch (Exception e) {
             return Optional.empty();
         }
@@ -61,7 +59,7 @@ public class MinioRepository implements StorageObjectRepository {
 
     @Override
     @SneakyThrows
-    public List<StorageObjectStats> allObjectsInFolder(String path) {
+    public List<StorageObjectResponse> allObjectsInFolder(String path) {
         return operationResolver.resolve(path)
                 .findObjectsWithPrefix(path);
     }

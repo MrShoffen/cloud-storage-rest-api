@@ -3,7 +3,7 @@ package org.mrshoffen.cloudstorage.storage.minio;
 import io.minio.*;
 import io.minio.errors.MinioException;
 import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.model.StorageObjectStats;
+import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,7 +21,7 @@ public class MinioFileOperations extends MinioOperations {
 
     @Override
     @SneakyThrows
-    public StorageObjectStats objectStats(String fullPath) {
+    public StorageObjectResponse objectStats(String fullPath) {
         StatObjectResponse response = minioClient.statObject(
                 StatObjectArgs.builder()
                         .bucket(bucket)
@@ -29,7 +29,7 @@ public class MinioFileOperations extends MinioOperations {
                         .build()
         );
 
-        return StorageObjectStats.builder()
+        return StorageObjectResponse.builder()
                 .name(extractSimpleName(response.object()))
                 .path(extractRelativePath(response.object()))
                 .isFolder(false)

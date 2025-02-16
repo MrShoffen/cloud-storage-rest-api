@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.storage.model;
+package org.mrshoffen.cloudstorage.storage.model.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +12,7 @@ import java.time.ZonedDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class StorageObjectStats {
+public class StorageObjectResponse {
     private String name;
     private String path;
     private Long size;
