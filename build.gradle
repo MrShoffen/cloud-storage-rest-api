@@ -53,11 +53,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
-
-bootJar {
-    archiveFileName = 'cloud-rest-api.jar'
-}
-
 jib{
     to{
         image = 'spring-boot-cloud-rest-api:1'
