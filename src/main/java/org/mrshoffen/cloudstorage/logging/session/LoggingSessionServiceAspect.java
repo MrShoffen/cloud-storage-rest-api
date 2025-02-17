@@ -6,18 +6,9 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.annotation.Pointcut;
-import org.mrshoffen.cloudstorage.security.entity.StorageUserDetails;
 import org.mrshoffen.cloudstorage.user.events.UserPasswordUpdateEvent;
 import org.mrshoffen.cloudstorage.user.events.UserUpdateInfoEvent;
-import org.mrshoffen.cloudstorage.user.model.entity.User;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.session.Session;
-import org.springframework.session.data.redis.RedisIndexedSessionRepository;
 import org.springframework.stereotype.Component;
-
-import java.util.Arrays;
-
-import static org.springframework.security.web.context.HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY;
 
 @Aspect
 @Component

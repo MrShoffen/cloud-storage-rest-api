@@ -7,6 +7,8 @@ import io.minio.RemoveObjectsArgs;
 import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.SneakyThrows;
+import org.mrshoffen.cloudstorage.storage.exception.MinioOperationException;
+import org.mrshoffen.cloudstorage.storage.exception.StorageDownloadException;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -116,11 +118,11 @@ public class MinioFolderOperations extends MinioOperations {
 
                             zipOut.closeEntry();
                         } catch (Exception e) {
-                            throw new RuntimeException("Ошибка при добавлении файла в архив: " + objectName, e);
+                            throw new MinioOperationException("Ошибка при добавлении файла в архив: " + objectName, e);
                         }
                     }
                 } catch (IOException e) {
-                    throw new RuntimeException("Ошибка при создании архива", e);
+                    throw new MinioOperationException("Ошибка при создании архива", e);
                 } finally {
                     try {
                         pipedOutputStream.close();

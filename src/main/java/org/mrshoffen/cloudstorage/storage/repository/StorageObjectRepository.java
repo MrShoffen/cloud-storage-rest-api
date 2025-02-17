@@ -11,11 +11,10 @@ import java.util.Optional;
 
 public interface StorageObjectRepository {
 
-    String objectDownloadLink(String objectPath, int timeout)
+    String objectDownloadLink(String objectPath)
             throws StorageObjectNotFoundException;
 
-    Optional<StorageObjectResponse> objectStats(String objectPath)
-            throws StorageObjectNotFoundException;
+    Optional<StorageObjectResponse> objectStats(String objectPath);
 
     void forceUpload(String objectPath, InputStream inputStream, long size);
 

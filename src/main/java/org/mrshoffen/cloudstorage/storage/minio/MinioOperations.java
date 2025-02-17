@@ -100,17 +100,6 @@ public abstract class MinioOperations {
 
     }
 
-    private Long getItemSize(Item item) {
-        if (item.isDir()) {
-            return findItemsWithPrefix(item.objectName(), true)
-                    .stream()
-                    .map(Item::size)
-                    .reduce(0L, Long::sum);
-        } else {
-            return item.size();
-        }
-    }
-
     protected InputStream getFileStream(String fullFilePath) throws ErrorResponseException, InsufficientDataException, InternalException, InvalidKeyException, InvalidResponseException, IOException, NoSuchAlgorithmException, ServerException, XmlParserException {
         return minioClient.getObject(
                 GetObjectArgs.builder()

@@ -24,8 +24,5 @@ public class MinioConfig {
                 .endpoint(endpoint)
                 .credentials(user,password)
                 .build();
-
     }
-
-
 }

@@ -1,0 +1,43 @@
+services:
+  cloud-rest-api:
+    container_name: spring-cloud-rest-api
+    image: spring-boot-cloud-rest-api:1 #run './gradlew jibDockerBuild' to build image
+    env_file:
+      - ./vars.env
+    depends_on:
+      - database
+      - redis
+      - minio
+
+  redis:
+    container_name: cloud_redis
+    image: redis:7
+    env_file:
+      - ./vars.env
+    volumes:
+      - redis-data:/data
+
+  minio:
+    container_name: cloud_minio
+    image: minio/minio:latest
+    command: server /data --console-address :9001
+    env_file:
+      - ./vars.env
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9001:9001"
+      - "9000:9000"
+
+  database:
+    container_name: cloud_database
+    image: postgres:17
+    env_file:
+      - ./vars.env
+    volumes:
+      - postgres-data:/data
+
+volumes:
+  minio-data:
+  redis-data:
+  postgres-data:

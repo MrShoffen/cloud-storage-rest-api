@@ -28,27 +28,13 @@ public class UserStorageService {
 
     private final StorageObjectRepository repository;
 
-    private final PresignedCacheService cacheService;
-
-    @Value("${minio.presigned-timeout}")
-    private int presignedLinkTimeout;
-
     @Value("${minio.empty-folder-tag}")
     private String emptyFolderTag;
 
     public String getPreviewLink(User user, String objectPath) {
         String fullPath = getFullPath(user, objectPath);
 
-        String cachedLink = cacheService.getPresignedUrl(fullPath);
-        if (cachedLink != null) {
-            return cachedLink;
-        }
-
-        String presLink = repository.objectDownloadLink(fullPath, presignedLinkTimeout);
-
-        cacheService.savePresignedUrl(fullPath, presLink, presignedLinkTimeout);
-
-        return presLink;
+        return repository.objectDownloadLink(fullPath);
     }
 
     public StorageObjectResponse getObjectStats(User user, String objectPath) {
@@ -70,8 +56,9 @@ public class UserStorageService {
     }
 
     public void copyObject(User user, String from, String to) {
-        if (getUsedMemory(user) > user.getStoragePlan().getCapacity() * 1024 * 1024 * 1024) {
-            throw new UserStorageCapacityExceeded("Исчерпан лимит хранилища %d MB"
+        long userStorageMaxCapacityBytes = user.getStoragePlan().getCapacity() * 1024 * 1024 * 1024;
+        if (getUsedMemory(user) > userStorageMaxCapacityBytes) {
+            throw new UserStorageCapacityExceeded("Исчерпан лимит хранилища %d GB"
                     .formatted(user.getStoragePlan().getCapacity()));
         }
         String fullSourcePath = getFullPath(user, from);
@@ -106,8 +93,9 @@ public class UserStorageService {
         String fullPathToTargetFolder = getFullPath(user, targetFolder);
 
         long sizeForUpload = files.stream().map(MultipartFile::getSize).reduce(0L, Long::sum);
-        if (getUsedMemory(user) + sizeForUpload > user.getStoragePlan().getCapacity() * 1024 * 1024 * 1024) {
-            throw new UserStorageCapacityExceeded("Исчерпан лимит хранилища %d MB"
+        long userStorageMaxCapacityBytes = user.getStoragePlan().getCapacity() * 1024 * 1024 * 1024;
+        if (getUsedMemory(user) + sizeForUpload > userStorageMaxCapacityBytes) {
+            throw new UserStorageCapacityExceeded("Исчерпан лимит хранилища %d GB"
                     .formatted(user.getStoragePlan().getCapacity()));
         }
 

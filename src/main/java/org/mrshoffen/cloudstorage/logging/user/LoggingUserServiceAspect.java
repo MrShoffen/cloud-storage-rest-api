@@ -3,9 +3,6 @@ package org.mrshoffen.cloudstorage.logging.user;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
-import org.mrshoffen.cloudstorage.user.events.UserPasswordUpdateEvent;
-import org.mrshoffen.cloudstorage.user.events.UserUpdateInfoEvent;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;

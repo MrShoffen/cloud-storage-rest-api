@@ -2,12 +2,16 @@ package org.mrshoffen.cloudstorage.storage.repository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import org.mrshoffen.cloudstorage.storage.exception.MinioOperationException;
+import org.mrshoffen.cloudstorage.storage.exception.StorageDownloadException;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperationResolver;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperations;
+import org.mrshoffen.cloudstorage.storage.service.PresignedCacheService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Repository;
 
@@ -21,17 +25,29 @@ public class MinioRepository implements StorageObjectRepository {
 
     private final MinioOperationResolver operationResolver;
 
+    private final PresignedCacheService presignedCacheService;
+
+    @Value("${minio.presigned-timeout}")
+    private int presignedLinkTimeout;
+
     @Override
-    public String objectDownloadLink(String objectPath, int timeout) throws StorageObjectNotFoundException {
+    public String objectDownloadLink(String objectPath) throws StorageObjectNotFoundException {
+        String cachedLink = presignedCacheService.getPresignedUrl(objectPath);
+        if (cachedLink != null) {
+            return cachedLink;
+        }
+
         MinioOperations operations = operationResolver.resolve(objectPath);
-
         ensureObjectExists(objectPath, operations);
+        String presignedLink = operations.getPresignedLink(objectPath, presignedLinkTimeout);
 
-        return operations.getPresignedLink(objectPath, timeout);
+        presignedCacheService.savePresignedUrl(objectPath, presignedLink, presignedLinkTimeout);
+
+        return presignedLink;
     }
 
     @Override
-    public Optional<StorageObjectResponse> objectStats(String objectPath) throws StorageObjectNotFoundException {
+    public Optional<StorageObjectResponse> objectStats(String objectPath)  {
         try {
             StorageObjectResponse storageObjectResponse = operationResolver.resolve(objectPath)
                     .objectStats(objectPath);
@@ -58,7 +74,6 @@ public class MinioRepository implements StorageObjectRepository {
     }
 
     @Override
-    @SneakyThrows
     public List<StorageObjectResponse> allObjectsInFolder(String path) {
         return operationResolver.resolve(path)
                 .findObjectsWithPrefix(path);
@@ -70,12 +85,15 @@ public class MinioRepository implements StorageObjectRepository {
 
         ensureObjectExists(path, operations);
 
-        InputStream stream = operations.readObject(path);
-
-        return StorageObjectResourceDto.builder()
-                .downloadResource(new InputStreamResource(stream))
-                .nameForSave(extractSimpleName(path))
-                .build();
+        try {
+            InputStream stream = operations.readObject(path);
+            return StorageObjectResourceDto.builder()
+                    .downloadResource(new InputStreamResource(stream))
+                    .nameForSave(extractSimpleName(path))
+                    .build();
+        } catch (Exception e) {
+            throw new StorageDownloadException(e);
+        }
     }
 
 
@@ -91,7 +109,6 @@ public class MinioRepository implements StorageObjectRepository {
 
 
     @Override
-    @SneakyThrows
     public void delete(String deletePath) throws StorageObjectNotFoundException {
         MinioOperations operations = operationResolver.resolve(deletePath);
 
@@ -101,8 +118,7 @@ public class MinioRepository implements StorageObjectRepository {
     }
 
     @Override
-    @SneakyThrows
-    public void move(String sourcePath, String targetPath)  throws StorageObjectNotFoundException, StorageObjectAlreadyExistsException {
+    public void move(String sourcePath, String targetPath) throws StorageObjectNotFoundException, StorageObjectAlreadyExistsException {
         MinioOperations operations = operationResolver.resolve(sourcePath);
 
         ensureObjectExists(sourcePath, operations);

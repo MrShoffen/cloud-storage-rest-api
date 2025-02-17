@@ -1,5 +1,6 @@
 package org.mrshoffen.cloudstorage.storage.advice;
 
+import org.mrshoffen.cloudstorage.storage.exception.StorageDownloadException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
 import org.mrshoffen.cloudstorage.storage.exception.UserStorageCapacityExceeded;
@@ -57,6 +58,18 @@ public class StorageControllerAdvice {
                         StorageOperationResponse.builder()
                                 .status(PAYLOAD_TOO_LARGE.value())
                                 .title(PAYLOAD_TOO_LARGE.getReasonPhrase())
+                                .detail(ex.getMessage())
+                                .build()
+                );
+    }
+
+    @ExceptionHandler(StorageDownloadException.class)
+    public ResponseEntity<StorageOperationResponse> handleStorageDownloadException(StorageDownloadException ex) {
+        return ResponseEntity.status(INTERNAL_SERVER_ERROR)
+                .body(
+                        StorageOperationResponse.builder()
+                                .status(INTERNAL_SERVER_ERROR.value())
+                                .title(INTERNAL_SERVER_ERROR.getReasonPhrase())
                                 .detail(ex.getMessage())
                                 .build()
                 );
