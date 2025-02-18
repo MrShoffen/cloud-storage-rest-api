@@ -1,6 +1,6 @@
 package org.mrshoffen.cloudstorage.storage.repository;
 
-import org.mrshoffen.cloudstorage.storage.cache.MinioCacheService;
+import org.mrshoffen.cloudstorage.storage.minio.MinioCacheService;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperationResolver;
@@ -25,8 +25,6 @@ public class CachedMinioRepository extends MinioRepository {
 
     private final MinioCacheService cacheService;
 
-
-//    @Autowired
     public CachedMinioRepository(MinioOperationResolver operationResolver, MinioCacheService presignedCacheService) {
         super(operationResolver);
         this.cacheService = presignedCacheService;
@@ -47,7 +45,7 @@ public class CachedMinioRepository extends MinioRepository {
     @Override
     public List<StorageObjectResponse> allObjectsInFolder(String path) {
         List<StorageObjectResponse> cachedList = cacheService.getFolderContent(path);
-        if (cachedList != null) {
+        if (!cachedList.isEmpty()) {
             return cachedList;
         }
 
@@ -59,12 +57,28 @@ public class CachedMinioRepository extends MinioRepository {
     @Override
     public void delete(String deletePath) throws StorageObjectNotFoundException {
         String folderWithDeletedObject = extractObjectFolder(deletePath);
-        List<StorageObjectResponse> folderContent = cacheService.getFolderContent(folderWithDeletedObject);
-        if (folderContent != null) {
-            cacheService.deleteFolderContent(folderWithDeletedObject);
-        }
         cacheService.deleteFolderContent(folderWithDeletedObject);
+
         super.delete(deletePath);
+    }
+
+    @Override
+    public void copy(String sourcePath, String targetPath) throws StorageObjectNotFoundException, StorageObjectAlreadyExistsException {
+        String folderWithTargetObject = extractObjectFolder(targetPath);
+        cacheService.deleteFolderContent(folderWithTargetObject);
+
+        super.copy(sourcePath, targetPath);
+    }
+
+    @Override
+    public void move(String sourcePath, String targetPath) throws StorageObjectNotFoundException, StorageObjectAlreadyExistsException {
+        String folderWithTargetObject = extractObjectFolder(targetPath);
+        cacheService.deleteFolderContent(folderWithTargetObject);
+
+        String folderWithSourceObject = extractObjectFolder(sourcePath);
+        cacheService.deleteFolderContent(folderWithSourceObject);
+
+        super.move(sourcePath, targetPath);
     }
 
     @Override
@@ -83,6 +97,7 @@ public class CachedMinioRepository extends MinioRepository {
         for (String subPath : allSubPaths) {
             cacheService.deleteFolderContent(subPath);
         }
+
         super.safeUpload(objectPath, inputStream, size);
     }
 

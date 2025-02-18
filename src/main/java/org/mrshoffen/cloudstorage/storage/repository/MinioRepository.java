@@ -7,11 +7,9 @@ import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResour
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperationResolver;
-import org.mrshoffen.cloudstorage.storage.minio.MinioOperations;
-import org.mrshoffen.cloudstorage.storage.cache.MinioCacheService;
+import org.mrshoffen.cloudstorage.storage.minio.operations.MinioOperations;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.stereotype.Repository;
 
 import java.io.InputStream;
 import java.util.List;

@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.storage.minio;
+package org.mrshoffen.cloudstorage.storage.minio.operations;
 
 import io.minio.*;
 import io.minio.errors.*;

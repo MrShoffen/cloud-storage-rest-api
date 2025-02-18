@@ -2,6 +2,9 @@ package org.mrshoffen.cloudstorage.storage.minio;
 
 
 import lombok.RequiredArgsConstructor;
+import org.mrshoffen.cloudstorage.storage.minio.operations.MinioFileOperations;
+import org.mrshoffen.cloudstorage.storage.minio.operations.MinioFolderOperations;
+import org.mrshoffen.cloudstorage.storage.minio.operations.MinioOperations;
 import org.springframework.stereotype.Service;
 
 @Service

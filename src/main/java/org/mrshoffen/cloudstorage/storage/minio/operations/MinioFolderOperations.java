@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.storage.minio;
+package org.mrshoffen.cloudstorage.storage.minio.operations;
 
 import io.minio.CopyObjectArgs;
 import io.minio.CopySource;
@@ -8,7 +8,6 @@ import io.minio.messages.DeleteObject;
 import io.minio.messages.Item;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.exception.MinioOperationException;
-import org.mrshoffen.cloudstorage.storage.exception.StorageDownloadException;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
