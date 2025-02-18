@@ -45,6 +45,7 @@ public class MinioCacheService {
         } catch (Exception e) {
             throw new RuntimeException("Ошибка десериализации объектов", e);
         }
+
         return null;
     }
 
