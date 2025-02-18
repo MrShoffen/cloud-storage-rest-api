@@ -2,7 +2,3 @@
 databaseChangeLog:
   - include:
       file: db/changelog/user-table.sql
-#  - include:
-#      file: db/changelog/session-table.sql
-#  - include:
-#      file: db/changelog/locations-table.sql

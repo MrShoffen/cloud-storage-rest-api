@@ -33,7 +33,7 @@ public class LoggingStorageServiceAspect {
         String method = joinPoint.getSignature().getName();
 
         log.info("{} : {} : SUCCESS : User[{}] : Request path - {} \n ->Resource: {}", className, method,
-                userId,
+                user,
                 requestPath == null || requestPath.isBlank() ? "[root folder]" : requestPath,
                 resource);
     }
@@ -49,7 +49,7 @@ public class LoggingStorageServiceAspect {
         String method = joinPoint.getSignature().getName();
 
         log.info("{} : {} : FAILED : User[{}] : Request path - {} : Reason - {}", className, method,
-                userId,
+                user,
                 requestPath == null || requestPath.isBlank() ? "[root folder]" : requestPath,
                 ex.toString());
     }
@@ -70,7 +70,7 @@ public class LoggingStorageServiceAspect {
         String method = joinPoint.getSignature().getName();
 
         log.info("{} : {} : SUCCESS : User[{}] : From - {} : To - {}", className, method,
-                userId,
+                user,
                 source,
                 target);
     }
@@ -87,7 +87,7 @@ public class LoggingStorageServiceAspect {
         String method = joinPoint.getSignature().getName();
 
         log.info("{} : {} : FAILED : User[{}] : From - {} : To - {} : Reason - {}", className, method,
-                userId,
+                user,
                 source,
                 target,
                 ex.toString());
@@ -109,7 +109,7 @@ public class LoggingStorageServiceAspect {
         String method = joinPoint.getSignature().getName();
 
         log.info("{} : {} : UPLOADED : User[{}] : Target folder - {} \n -> Input files:\n   {} \n -> Response - {}", className, method,
-                userId,
+                user,
                 targetFolder,
                 files.stream().map(MultipartFile::getOriginalFilename).collect(Collectors.joining("\n   ")),
                 response
@@ -129,7 +129,7 @@ public class LoggingStorageServiceAspect {
         String method = joinPoint.getSignature().getName();
 
         log.info("{} : {} : UPLOAD FAILED : User[{}] : Target folder - {} \n -> Input files:\n   {} \n -> Reason - {}", className, method,
-                userId,
+                user,
                 targetFolder,
                 files.stream().map(MultipartFile::getOriginalFilename).collect(Collectors.joining("\n   ")),
                 ex.toString()

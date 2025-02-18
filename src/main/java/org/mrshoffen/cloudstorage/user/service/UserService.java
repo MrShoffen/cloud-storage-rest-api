@@ -60,7 +60,7 @@ public class UserService {
         String newPassword = userPasswordEditDto.newPassword();
 
         if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new IncorrectPasswordException("Incorrect password");
+            throw new IncorrectPasswordException("Неверный пароль");
         }
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);

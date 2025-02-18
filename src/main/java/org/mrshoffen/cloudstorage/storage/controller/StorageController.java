@@ -1,5 +1,6 @@
 package org.mrshoffen.cloudstorage.storage.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
@@ -22,7 +23,7 @@ import java.util.Map;
 import static org.springframework.http.HttpStatus.*;
 
 @RestController
-@RequestMapping("/api/v1/resources") //todo rename endpoint
+@RequestMapping("/api/v1/resources")
 @RequiredArgsConstructor
 public class StorageController {
 
@@ -67,6 +68,7 @@ public class StorageController {
                                 .status(NO_CONTENT.value())
                                 .title(NO_CONTENT.getReasonPhrase())
                                 .detail("Удаление успешно выполнено")
+                                .path(objectPath)
                                 .build()
                 );
     }
@@ -79,6 +81,7 @@ public class StorageController {
         return ResponseEntity.ok(content);
     }
 
+    @Operation()
     @SneakyThrows
     @GetMapping("/search")
     public ResponseEntity<List<StorageObjectResponse>> searchObjectsInFolder(@AuthenticationPrincipal(expression = "getUser") User user,
@@ -149,15 +152,11 @@ public class StorageController {
                                                                @RequestParam(value = "path") String target) {
         userStorageService.moveObject(user, source, target);
         return ResponseEntity
-                .created(
-                        UriComponentsBuilder
-                                .fromPath("{path}")
-                                .build(Map.of("path", target))
-                )
+                .ok()
                 .body(
                         StorageOperationResponse.builder()
-                                .status(OK.value())
-                                .title(OK.getReasonPhrase())
+                                .status(CREATED.value())
+                                .title(CREATED.getReasonPhrase())
                                 .detail("Перемещение успешно выполнено")
                                 .path(target)
                                 .build()

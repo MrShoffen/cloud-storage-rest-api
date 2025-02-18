@@ -5,8 +5,7 @@ import lombok.*;
 
 import java.io.Serializable;
 
-@Getter
-@Setter
+@Data //в данной модели безопасно
 @NoArgsConstructor
 @Entity
 @Table(name = "users")

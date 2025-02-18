@@ -1,0 +1,886 @@
+openapi: 3.0.3
+info:
+  title: Cloud Storage API
+  description: |-
+    Простой API для работы с облачным хранилищем. Для доступа к защищенным контроллерам сначала необходимо авторизоваться - для этого используйте эндпоинт /api/v1/auth/login. После этого установятся куки и другие эндпоинты так же станут доступны
+  version: 1.0.1
+servers:
+  - url: /
+tags:
+  - name: user
+    description: Операции с пользователем
+  - name: authentication
+    description: Аутентификация
+  - name: storage
+    description: Операции над файлами и папками
+paths:
+  #user api
+
+  /api/v1/users:
+    post:
+      tags:
+        - user
+      summary: Регистрация пользователя
+      operationId: create-user
+      requestBody:
+        description: DTO для регистрации пользователя
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateDto'
+            example:
+              "username": "user_1"
+              "password": "password"
+              "avatarUrl": "http://image.jpg"
+              "storagePlan": "BASIC"
+        required: true
+      responses:
+        '201':
+          description: Успешная регистрация
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+              example:
+                "id": 1
+                "username": "user_1"
+                "avatarUrl": "http://image.jpg"
+                "storagePlan": "BASIC"
+        '409':
+          description: Пользователь с таким именем уже существует
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                "type": "about:blank"
+                "title": "Conflict"
+                "status": 409
+                "detail": "Пользователь с именем 'user' уже существует"
+                "instance": "/api/v1/users"
+        '400':
+          description: Неверный формат данных
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                "type": "about:blank"
+                "title": "Bad Request"
+                "status": 400
+                "detail": "Описание ошибок валидации"
+                "instance": "/api/v1/users"
+
+  /api/v1/users/me:
+    get:
+      tags:
+        - user
+      summary: Данные авторизованного пользователя
+      description: Возвращает dto с данными авторизованного пользователя. Основная задача эндпоинта - проверка, что пользователь авторизован. Сюда переодически отправляет запрос фронтенд для проверки активной сессии
+      operationId: getUser
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+              example:
+                "id": 1
+                "username": "user_1"
+                "avatarUrl": "http://image.jpg"
+                "storagePlan": "BASIC"
+        '403':
+          description: Пользователь не авторизован
+
+  /api/v1/users/me/profile:
+    patch:
+      tags:
+        - user
+      summary: Изменение данных пользователя
+      description: Изменяет данные пользователя - имя и/или аватар
+      operationId: updateUserInfo
+      security:
+        - SessionAuth: []
+      requestBody:
+        description: DTO для изменения данных пользователя
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInfoEditDto'
+        required: true
+      responses:
+        '200':
+          description: Данные успешно изменены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+              example:
+                "id": 1
+                "username": "user_2"
+                "avatarUrl": "http://new-avatar.jpg"
+                "storagePlan": "PRO"
+        '409':
+          description: Пользователь с таким именем уже существует
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                "type": "about:blank"
+                "title": "Conflict"
+                "status": 409
+                "detail": "Пользователь с именем 'user_2' уже существует"
+                "instance": "/api/v1/users/me/profile"
+        '403':
+          description: Пользователь не авторизован
+        '400':
+          description: Неверный формат данных
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                "type": "about:blank"
+                "title": "Bad Request"
+                "status": 400
+                "detail": "Описание ошибок валидации"
+                "instance": "/api/v1/users/me/profile"
+
+  /api/v1/users/me/password:
+    patch:
+      tags:
+        - user
+      operationId: updateUserPassword
+      security:
+        - SessionAuth: []
+      summary: Изменение пароля пользователя
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPasswordEditDto'
+        required: true
+      responses:
+        '200':
+          description: Пароль успешно изменен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+              example:
+                "id": 1
+                "username": "user_1"
+                "avatarUrl": "http://image.jpg"
+                "storagePlan": "BASIC"
+        '403':
+          description: Пользователь не авторизован
+        '400':
+          description: Неверный формат данных
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                "type": "about:blank"
+                "title": "Bad Request"
+                "status": 400
+                "detail": "Описание ошибок валидации"
+                "instance": "/api/v1/users/me/password"
+        '401':
+          description: Некорректный текущий пароль
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                "type": "about:blank"
+                "title": "Unauthorized"
+                "status": 401
+                "detail": "Неверный пароль"
+                "instance": "/api/v1/users/me/password"
+
+
+  /api/v1/auth/login:
+    post:
+      tags:
+        - authentication
+      operationId: login
+      summary: Аутентификация
+      description: После успешной аутентификации в ответе будут установлены куки SESSION, которые используются для дальнейшей авторизации
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+              example:
+                "id": 1
+                "username": "user_1"
+                "avatarUrl": "http://image.jpg"
+                "storagePlan": "BASIC"
+        '403':
+          description: Пользователь не авторизован
+        '400':
+          description: Неверный формат данных
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                "type": "about:blank"
+                "title": "Bad Request"
+                "status": 400
+                "detail": "Описание ошибок валидации"
+                "instance": "/api/v1/auth/login"
+        '401':
+          description: Неверные учетные данные (пароль или имя пользователя)
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+              example:
+                "type": "about:blank"
+                "title": "Unauthorized"
+                "status": 401
+                "detail": "Неправильное имя пользователя или пароль"
+                "instance": "/api/v1/auth/login"
+
+  /api/v1/auth/logout:
+    post:
+      tags:
+        - authentication
+      operationId: logout
+      summary: Выход из аккаунта
+      description: При успешном выходе - сессия удаляется и удаляется куки SESSION
+      responses:
+        '204':
+          description: Выход успешно выполнен
+        '403':
+          description: Пользователь не авторизован
+
+
+  ###хранилище
+
+
+  /api/v1/resources:
+    delete:
+      tags:
+        - storage
+      operationId: deleteObject
+      security:
+        - SessionAuth: []
+      summary: Удалить файл или папку
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Путь к файлу или папке от корневой директории
+          schema:
+            type: string
+          example: directory1/directory2/ - удалить папку directory2
+      responses:
+        '200':
+          description: Удаление успешно выполнено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "OK"
+                "status": 200
+                "detail": "Удаление успешно выполнено"
+                "path": "directory/directory2/"
+        '403':
+          description: Пользователь не авторизован
+        '404':
+          description: Удаляемый ресурс не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Not Found"
+                "status": 404
+                "detail": "'directory/directory2/' не существует в исходной папке"
+                "path": "directory/directory2/"
+
+    get:
+      tags:
+        - storage
+      operationId: getObjectStats
+      summary: Получить метаинформацию о файле или папке
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Путь к файлу или папке от корневой директории. Пустой параметр - информация о корневом каталоге
+          schema:
+            type: string
+          example: directory1/file.txt
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageObjectResponse'
+              example:
+                "name": "test"
+                "path": "test"
+                "size": 1153295
+                "lastModified": "2025-02-18T14:18:31Z"
+                "folder": false
+        '403':
+          description: Пользователь не авторизован
+        '404':
+          description: Запрашиваемый ресурс не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Not Found"
+                "status": 404
+                "detail": "'test.txt' не существует в исходной папке"
+                "path": "directory/directory2/"
+
+    put:
+      tags:
+        - storage
+      operationId: createFolder
+      summary: Создать папку
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Путь к создаваемой папке от корневой директории. Должен оканчиваться на /
+          schema:
+            type: string
+            pattern: ^(?!.*//)[^/]+(/[^/]+)*/?$
+          example: directory1/directory2/
+      responses:
+        '201':
+          description: Папка успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Created"
+                "status": 201
+                "detail": "Папка успешно создана"
+                "path": "directory1/directory2/"
+        '409':
+          description: Папка по указанному пути уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Conflict"
+                "status": 409
+                "detail": "Папка 'directory1/directory2/' уже существует в целевой директории"
+                "path": null
+        '403':
+          description: Пользователь не авторизован
+
+
+  /api/v1/resources/copy:
+    post:
+      tags:
+        - storage
+      operationId: copyObject
+      security:
+        - SessionAuth: []
+      summary: Создать копию файла или папки
+      description: Необходимо указывать имя создаваемого ресурса. Пример - если копируем файл test.txt из корневой директории - в целевой директории так же необходимо указывать имя файла. Можно то же, можно новое - directory/subfolder/test.txt
+      parameters:
+        - name: from
+          in: query
+          required: true
+          description: Полный путь к ресурсу для копирования
+          schema:
+            type: string
+          example: test.txt
+        - name: path
+          in: query
+          required: true
+          description: Полный путь к сооздаваемому ресурсу (включая его имя!)
+          schema:
+            type: string
+          example: directory/test.txt
+      responses:
+        '201':
+          description: Копирование успешно выполнено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Created"
+                "status": 201
+                "detail": "Копирование успешно выполнено"
+                "path": "directory/test.txt"
+        '409':
+          description: Ресурс по указанному пути уже существует
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Conflict"
+                "status": 409
+                "detail": "'test' уже существует в целевой папке"
+                "path": null
+        '403':
+          description: Пользователь не авторизован
+        '404':
+          description: Копируемый ресурс не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Not Found"
+                "status": 404
+                "detail": "'test1' не существует в исходной папке"
+                "path": null
+
+
+  /api/v1/resources/download:
+    get:
+      tags:
+        - storage
+      operationId: downloadObject
+      security:
+        - SessionAuth: []
+      summary: Скачать папку или файл
+      description: Если скачивать папку - перед этим она будет упакована в zip архив
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Путь к файлу или папке от корневой директории
+          schema:
+            type: string
+          example: directory1/file.txt
+      responses:
+        '200':
+          description: Ресурс получен. Начало скачивания
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+              example: Бинарные данные файла или архива-папки
+        '404':
+          description: Ресурс для скачивания не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Not Found"
+                "status": 404
+                "detail": "'tesвt.jpg' не существует в исходной папке"
+                "path": null
+        '403':
+          description: Пользователь не авторизован
+
+  /api/v1/resources/files:
+    get:
+      tags:
+        - storage
+      operationId: getObjectsInFolder
+      security:
+        - SessionAuth: []
+      summary: Получить список файлов и папок в указанной директории.
+      description:  Для файлов будет добавлена метаинформация в виде последеней даты изменения и размера. У папок - нет (чтобы избежать рекурсивных "тяжелых" запросов)
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Путь директории
+          schema:
+            type: string
+          example: folder/
+      responses:
+        '200':
+          description: Список файлов и папок
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StorageObjectResponse'
+              example:
+                - "name": "248/"
+                  "path": "folder/248/"
+                  "size": 0
+                  "lastModified": null
+                  "folder": true
+                - "name": "test.txt"
+                  "path": "folder/test.txt"
+                  "size": 224887
+                  "lastModified": "2025-02-18T00:24:41.543Z"
+                  "folder": false
+        '403':
+          description: Пользователь не авторизован
+
+
+
+  /api/v1/resources/move:
+    put:
+      tags:
+        - storage
+      operationId: moveObject
+      security:
+        - SessionAuth: []
+      summary: Переместить файл или папку
+      description: Необходимо указывать имя создаваемого ресурса. Пример - если перемещаем файл test.txt из корневой директории - в целевой директории так же необходимо указывать имя файла. Можно то же, можно новое - directory/subfolder/test.txt (таким образом можно переименовывать объекты)
+      parameters:
+        - name: from
+          in: query
+          required: true
+          description: Полный путь к ресурсу для перемещения
+          schema:
+            type: string
+          example: test.txt
+        - name: path
+          in: query
+          required: true
+          description: Полный путь к сооздаваемому ресурсу (включая его имя!)
+          schema:
+            type: string
+          example: directory/test.txt
+      responses:
+        '200':
+          description: Перемещение успешно выполнено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "OK"
+                "status": 200
+                "detail": "Перемещение успешно выполнено"
+                "path": "test3/test.jpg"
+        '409':
+          description: Ресурс по указанному пути уже существует. Отмена перемещения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Conflict"
+                "status": 409
+                "detail": "'test.jpg' уже существует в целевой папке"
+                "path": null
+        '403':
+          description: Пользователь не авторизован
+        '404':
+          description: Ресурс для перемещения не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Not Found"
+                "status": 404
+                "detail": "'test.jpg' не существует в исходной папке"
+                "path": null
+
+  /api/v1/resources/preview:
+    get:
+      tags:
+        - storage
+      operationId: getObjectPreview
+      security:
+        - SessionAuth: []
+      summary: Получить ссылку с превью файла
+      description: Возвращает прямую ссылку на объект - по ней можно скачать файл напрямую через браузер. Её можно использовать любому пользователю, т.к. она обращается напрямую к хранилищу, без авторизации (функция "Поделиться"). Или использовать в качестве превью. Ссылка возвращается без имени бакета. Подразумевается, что запросы по ссылкам будут проксироваться для сокрытия имени бакета.
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Путь к файлу от корневой директории
+          schema:
+            type: string
+          example: folder/test.jpg
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: 14/test3/test.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=user%2F20250218%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250218T153442Z&X-Amz-Expires=3600&X-Amz-SignedHeaders=host&X-Amz-Signature=d72105c269a763b954f90e743582c17767d9c26997634c383f2b5a01d9197121
+        '404':
+          description: Ресурс для получения ссылки не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                "title": "Not Found"
+                "status": 404
+                "detail": "'folder/test.jpg' не существует в исходной папке"
+                "path": null
+        '403':
+          description: Пользователь не авторизован
+
+
+  /api/v1/resources/search:
+    get:
+      tags:
+        - storage
+      operationId: searchObjectsInFolder
+      security:
+        - SessionAuth: []
+      summary: Искать рекурсивно файлы в указанной папке
+      description: Поиск происходит по подстроке. Т.е. по имени '.jpg' найдутся все картинки формата jpg
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Путь к папке, в которой нужно искать, от корневой директории
+          schema:
+            type: string
+          example: folder/
+        - name: name
+          in: query
+          required: true
+          description: Файл для поиска.
+          example: .jpg
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Список файлов. Может быть пустым
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StorageObjectResponse'
+              example:
+                - "name": "first.jpg"
+                  "path": "folder/first.jpg"
+                  "size": 254811
+                  "lastModified": "2025-02-18T00:24:41.543Z"
+                  "folder": false
+                - "name": "test.jpg"
+                  "path": "folder/test.jpg"
+                  "size": 224887
+                  "lastModified": "2025-02-18T00:24:41.543Z"
+                  "folder": false
+
+
+  /api/v1/resources/upload:
+    post:
+      tags:
+        - storage
+      operationId: uploadObject
+      security:
+        - SessionAuth: []
+      summary: Загрузить файлы или папки
+      description: Файлы загружаются в формате MultipartFile. Можно загружать несколько файлов. Если в имени файла будет указана поддиректория (например, upload_folder/test.txt) - то при загрузке в storage_folder/ будет создана такая директория. В итоге файл после загрузки будет находиться в storage_folder/upload_folder/test.txt . Это позволяет загружать одним запросом файлы, целые папки и рекусривно вложенные подпапки одним запросом.
+      parameters:
+        - name: path
+          in: query
+          required: true
+          description: Путь к папке, в которую нужно загрузить файлы
+          example: fodler/
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                object:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+              required:
+                - object
+              example: Бинарные данные файлов. Массив из MultipartFile
+      responses:
+        '200':
+          description: Возвращает массив с результатами загрузки для каждого отдельного файла или папки. Файл может быт успешно загружен - для него будет статус 201 Created. Так же может быть статус 409 - файл не загружен, т.к. уже существует по указанному пути.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StorageOperationResponse'
+              example:
+                - "title": "Created"
+                  "status": 201
+                  "detail": "Файл успешно загружен"
+                  "path": "test.jpg"
+                - "title": "Conflict"
+                  "status": 409
+                  "detail": "Папка 'folder/' уже существует в целевой директории"
+                  "path": "null"
+        '403':
+          description: Пользователь не авторизован
+
+components:
+  schemas:
+
+    StorageOperationResponse:
+      type: object
+      description: Ответ с результатом операции над файлом или папкой
+      properties:
+        title:
+          type: string
+          title: Описание результата операции
+        status:
+          title: Статус операции
+          type: integer
+          format: int32
+
+        detail:
+          type: string
+          title: Подробное сообщение с результатом операции
+        path:
+          type: string
+          title: Путь к ресурсу, над которым производилась операция
+
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+
+
+    UserCreateDto:
+      type: object
+      properties:
+        username:
+          type: string
+          example: user_1
+        password:
+          type: string
+          example: password
+        avatarUrl:
+          type: string
+          example: http://image.jpg
+        storagePlan:
+          type: string
+          enum:
+            - BASIC
+            - STANDARD
+            - PRO
+      required:
+        - username
+        - password
+        - storagePlan
+
+
+    UserResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: long
+          example: 1
+        username:
+          type: string
+          example: user_1
+        avatarUrl:
+          type: string
+          example: http://image.jpg
+        storagePlan:
+          type: string
+          enum:
+            - BASIC
+            - STANDARD
+            - PRO
+
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          example: user_1
+        password:
+          type: string
+          example: password
+      required:
+        - username
+        - password
+
+    UserInfoEditDto:
+      type: object
+      properties:
+        newUsername:
+          type: string
+          example: user_2
+        newAvatarUrl:
+          type: string
+          example: http://new-avatar.jpg
+      required:
+        - newUsername
+
+    UserPasswordEditDto:
+      type: object
+      properties:
+        oldPassword:
+          type: string
+          example: password
+        newPassword:
+          type: string
+          example: password_new
+      required:
+        - oldPassword
+        - newPassword
+
+    StorageObjectResponse:
+      type: object
+      properties:
+        name:
+          type: string
+        path:
+          type: string
+        size:
+          type: integer
+          format: long
+        lastModified:
+          type: string
+          format: date-time
+        folder:
+          type: boolean
+
+  securitySchemes:
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: SESSION
