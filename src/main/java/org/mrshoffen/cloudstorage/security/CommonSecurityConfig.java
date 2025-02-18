@@ -40,7 +40,6 @@ public class CommonSecurityConfig {
     public UrlBasedCorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Настройки из вашего примера
         configuration.setAllowedOrigins(List.of(
                 "http://192.168.0.190:5173",
                 "http://192.168.0.125:80",

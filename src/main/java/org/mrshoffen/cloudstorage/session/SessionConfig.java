@@ -26,9 +26,9 @@ public class SessionConfig implements BeanClassLoaderAware {
     private ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.activateDefaultTyping(
-                LaissezFaireSubTypeValidator.instance,  // Используйте разрешающий валидатор типов
-                ObjectMapper.DefaultTyping.NON_FINAL,  // Сериализовать все неконечные классы
-                JsonTypeInfo.As.PROPERTY  // Добавить информацию о типе
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.NON_FINAL,
+                JsonTypeInfo.As.PROPERTY
         );
         mapper.registerModules(SecurityJackson2Modules.getModules(this.loader));
         return mapper;

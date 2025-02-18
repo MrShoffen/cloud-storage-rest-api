@@ -8,5 +8,4 @@ import java.util.Optional;
 public interface StorageUserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByUsernameIgnoreCase(String username);
-
 }

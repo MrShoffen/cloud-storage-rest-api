@@ -21,7 +21,6 @@ public class UserRegistrationController {
 
     @PostMapping
     public ResponseEntity<UserResponseDto> create(@Valid @RequestBody UserCreateDto dto) {
-
         UserResponseDto createdUser = service.create(dto);
 
         return ResponseEntity

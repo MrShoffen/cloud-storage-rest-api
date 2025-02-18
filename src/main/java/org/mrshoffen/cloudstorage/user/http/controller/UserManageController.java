@@ -26,11 +26,9 @@ public class UserManageController {
         return ResponseEntity.ok(mapper.toDto(user));
     }
 
-
     @PatchMapping("/profile")
     public ResponseEntity<UserResponseDto> updateUserInfo(@AuthenticationPrincipal(expression = "getUser") User user,
                                                              @Valid @RequestBody UserInfoEditDto editDto) {
-
         UserResponseDto updatedUser = service.updateUserProfile(user.getId(), editDto);
         return ResponseEntity.ok(updatedUser);
     }
@@ -38,7 +36,6 @@ public class UserManageController {
     @PatchMapping("/password")
     public ResponseEntity<UserResponseDto> updateUserPassword(@AuthenticationPrincipal(expression = "getUser") User user,
                                                               @Valid @RequestBody UserPasswordEditDto editDto){
-
         UserResponseDto updatedUser = service.updateUserPassword(user.getId(), editDto);
         return ResponseEntity.ok(updatedUser);
     }

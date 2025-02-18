@@ -30,13 +30,13 @@ public class MinioCacheService {
 
     @SneakyThrows
     public void saveFolderContent(String path, List<StorageObjectResponse> folderContent, long ttlInSeconds) {
-        String json = objectMapper.writeValueAsString(folderContent); // сериализуем List в JSON
-        redisTemplate.opsForValue().set(path, json, ttlInSeconds, TimeUnit.SECONDS); // сохраняем в Redis с TTL
+        String json = objectMapper.writeValueAsString(folderContent);
+        redisTemplate.opsForValue().set(path, json, ttlInSeconds, TimeUnit.SECONDS);
     }
 
     @SneakyThrows
     public List<StorageObjectResponse> getFolderContent(String path) {
-        String json = redisTemplate.opsForValue().get(path); // получаем JSON из Redis
+        String json = redisTemplate.opsForValue().get(path);
         if (json != null) {
             return objectMapper.readValue(json, new TypeReference<>() {
             });
