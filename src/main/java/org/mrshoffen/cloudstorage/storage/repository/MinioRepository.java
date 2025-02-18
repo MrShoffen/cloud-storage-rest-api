@@ -1,8 +1,6 @@
 package org.mrshoffen.cloudstorage.storage.repository;
 
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
-import org.mrshoffen.cloudstorage.storage.exception.MinioOperationException;
 import org.mrshoffen.cloudstorage.storage.exception.StorageDownloadException;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResponse;
 import org.mrshoffen.cloudstorage.storage.model.dto.response.StorageObjectResourceDto;
@@ -10,7 +8,7 @@ import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsEx
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperationResolver;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperations;
-import org.mrshoffen.cloudstorage.storage.service.PresignedCacheService;
+import org.mrshoffen.cloudstorage.storage.cache.PresignedCacheService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Repository;
@@ -47,7 +45,7 @@ public class MinioRepository implements StorageObjectRepository {
     }
 
     @Override
-    public Optional<StorageObjectResponse> objectStats(String objectPath)  {
+    public Optional<StorageObjectResponse> objectStats(String objectPath) {
         try {
             StorageObjectResponse storageObjectResponse = operationResolver.resolve(objectPath)
                     .objectStats(objectPath);
@@ -77,6 +75,19 @@ public class MinioRepository implements StorageObjectRepository {
     public List<StorageObjectResponse> allObjectsInFolder(String path) {
         return operationResolver.resolve(path)
                 .findObjectsWithPrefix(path);
+    }
+
+    @Override
+    public List<StorageObjectResponse> findObjectsByName(String folderPath, String objectName) {
+        return operationResolver.resolve(folderPath)
+                .findObjectsWithPrefixRecursive(folderPath)
+                .stream()
+                .filter(storageObject ->
+                        storageObject
+                                .getName()
+                                .toLowerCase()
+                                .contains(objectName.toLowerCase()))
+                .toList();
     }
 
     @Override

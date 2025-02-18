@@ -88,6 +88,12 @@ public class UserStorageService {
         }
     }
 
+    public List<StorageObjectResponse> findInFolder(User user, String folderPath, String nameToFind){
+        String fullPathToFolder = getFullPath(user, folderPath);
+
+        return repository.findObjectsByName(fullPathToFolder, nameToFind);
+    }
+
     @SneakyThrows
     public List<StorageOperationResponse> uploadObjectsToFolder(User user, List<MultipartFile> files, String targetFolder) {
         String fullPathToTargetFolder = getFullPath(user, targetFolder);

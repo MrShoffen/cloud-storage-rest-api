@@ -38,7 +38,6 @@ public class StorageController {
     @PutMapping
     public ResponseEntity<StorageOperationResponse> createFolder(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                  @RequestParam(value = "path") String folderPath) {
-
         userStorageService.createFolder(user, folderPath);
 
         return ResponseEntity
@@ -57,11 +56,35 @@ public class StorageController {
                 );
     }
 
+    @DeleteMapping
+    public ResponseEntity<StorageOperationResponse> deleteObject(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                 @RequestParam(value = "path") String objectPath) {
+        userStorageService.deleteObject(user, objectPath);
+        return ResponseEntity
+                .ok()
+                .body(
+                        StorageOperationResponse.builder()
+                                .status(NO_CONTENT.value())
+                                .title(NO_CONTENT.getReasonPhrase())
+                                .detail("Удаление успешно выполнено")
+                                .build()
+                );
+    }
+
     @SneakyThrows
     @GetMapping("/files")
     public ResponseEntity<List<StorageObjectResponse>> getObjectsInFolder(@AuthenticationPrincipal(expression = "getUser") User user,
                                                                           @RequestParam(value = "path") String folderPath) {
         List<StorageObjectResponse> content = userStorageService.listObjectsInFolder(user, folderPath);
+        return ResponseEntity.ok(content);
+    }
+
+    @SneakyThrows
+    @GetMapping("/search")
+    public ResponseEntity<List<StorageObjectResponse>> searchObjectsInFolder(@AuthenticationPrincipal(expression = "getUser") User user,
+                                                                             @RequestParam(value = "path") String folderPath,
+                                                                             @RequestParam(value = "name") String nameForSearch) {
+        List<StorageObjectResponse> content = userStorageService.findInFolder(user, folderPath, nameForSearch);
         return ResponseEntity.ok(content);
     }
 
@@ -137,22 +160,6 @@ public class StorageController {
                                 .title(OK.getReasonPhrase())
                                 .detail("Перемещение успешно выполнено")
                                 .path(target)
-                                .build()
-                );
-    }
-
-    @DeleteMapping
-    public ResponseEntity<StorageOperationResponse> deleteObject(@AuthenticationPrincipal(expression = "getUser") User user,
-                                                                 @RequestParam(value = "path") String objectPath) {
-
-        userStorageService.deleteObject(user, objectPath);
-        return ResponseEntity
-                .ok()
-                .body(
-                        StorageOperationResponse.builder()
-                                .status(NO_CONTENT.value())
-                                .title(NO_CONTENT.getReasonPhrase())
-                                .detail("Удаление успешно выполнено")
                                 .build()
                 );
     }

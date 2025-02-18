@@ -1,4 +1,4 @@
-package org.mrshoffen.cloudstorage.storage.service;
+package org.mrshoffen.cloudstorage.storage.cache;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;

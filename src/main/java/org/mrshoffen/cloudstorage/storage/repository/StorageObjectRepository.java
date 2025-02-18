@@ -23,6 +23,8 @@ public interface StorageObjectRepository {
 
     List<StorageObjectResponse> allObjectsInFolder(String path);
 
+    List<StorageObjectResponse> findObjectsByName(String folderPath, String objectName);
+
     StorageObjectResourceDto getAsResource(String path)
             throws StorageObjectNotFoundException;
 

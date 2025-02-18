@@ -78,6 +78,21 @@ public abstract class MinioOperations {
 
     }
 
+    public List<StorageObjectResponse> findObjectsWithPrefixRecursive(String fullPathToFolder) {
+        List<Item> items = findItemsWithPrefix(fullPathToFolder, true);
+
+        return items.stream()
+                .map(item -> StorageObjectResponse.builder()
+                        .name(extractSimpleName(item.objectName()))
+                        .path(extractRelativePath(item.objectName()))
+                        .isFolder(item.isDir())
+                        .lastModified(item.lastModified())
+                        .size(item.size())
+                        .build())
+                .toList();
+
+    }
+
 
     protected List<Item> findItemsWithPrefix(String prefix, boolean recursive) {
         Iterable<Result<Item>> objects = minioClient.listObjects(
