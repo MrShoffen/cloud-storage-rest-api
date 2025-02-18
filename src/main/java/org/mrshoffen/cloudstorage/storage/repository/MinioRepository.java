@@ -8,7 +8,7 @@ import org.mrshoffen.cloudstorage.storage.exception.StorageObjectAlreadyExistsEx
 import org.mrshoffen.cloudstorage.storage.exception.StorageObjectNotFoundException;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperationResolver;
 import org.mrshoffen.cloudstorage.storage.minio.MinioOperations;
-import org.mrshoffen.cloudstorage.storage.cache.PresignedCacheService;
+import org.mrshoffen.cloudstorage.storage.cache.MinioCacheService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Repository;
@@ -17,29 +17,20 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
+//@Repository
 @RequiredArgsConstructor
 public class MinioRepository implements StorageObjectRepository {
 
     private final MinioOperationResolver operationResolver;
 
-    private final PresignedCacheService presignedCacheService;
-
-    @Value("${minio.presigned-timeout}")
+    @Value("${minio.cache.presigned-timeout}")
     private int presignedLinkTimeout;
 
     @Override
     public String objectDownloadLink(String objectPath) throws StorageObjectNotFoundException {
-        String cachedLink = presignedCacheService.getPresignedUrl(objectPath);
-        if (cachedLink != null) {
-            return cachedLink;
-        }
-
         MinioOperations operations = operationResolver.resolve(objectPath);
         ensureObjectExists(objectPath, operations);
         String presignedLink = operations.getPresignedLink(objectPath, presignedLinkTimeout);
-
-        presignedCacheService.savePresignedUrl(objectPath, presignedLink, presignedLinkTimeout);
 
         return presignedLink;
     }

@@ -1,10 +1,12 @@
 package org.mrshoffen.cloudstorage.storage.model.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.time.ZonedDateTime;
 
 
@@ -12,10 +14,12 @@ import java.time.ZonedDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class StorageObjectResponse {
+public class StorageObjectResponse implements Serializable {
     private String name;
     private String path;
     private Long size;
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     ZonedDateTime lastModified;
     private boolean isFolder;
 }

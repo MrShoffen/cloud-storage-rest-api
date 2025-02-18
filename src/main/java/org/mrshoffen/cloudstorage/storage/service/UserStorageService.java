@@ -47,7 +47,16 @@ public class UserStorageService {
     @SneakyThrows
     public List<StorageObjectResponse> listObjectsInFolder(User user, String folderPath) {
         String fullPathToFolder = getFullPath(user, folderPath);
-        return repository.allObjectsInFolder(fullPathToFolder);
+        long start = System.currentTimeMillis();
+        List<StorageObjectResponse> storageObjectResponses = repository.allObjectsInFolder(fullPathToFolder);
+        long end = System.currentTimeMillis();
+
+        System.out.println("-------");
+        System.out.println(end - start);
+        System.out.println("-------");
+
+
+        return storageObjectResponses;
     }
 
     public StorageObjectResourceDto downloadObject(User user, String objectPath) {
@@ -88,7 +97,7 @@ public class UserStorageService {
         }
     }
 
-    public List<StorageObjectResponse> findInFolder(User user, String folderPath, String nameToFind){
+    public List<StorageObjectResponse> findInFolder(User user, String folderPath, String nameToFind) {
         String fullPathToFolder = getFullPath(user, folderPath);
 
         return repository.findObjectsByName(fullPathToFolder, nameToFind);

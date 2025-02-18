@@ -39,5 +39,8 @@ minio:
   endpoint: ${MINIO_URL}
   user: ${MINIO_ROOT_USER}
   password: ${MINIO_ROOT_PASSWORD}
-  presigned-timeout: 3600 #seconds
   empty-folder-tag: "*empty-folder-tag*"
+
+  cache:
+    presigned-timeout: 3600 #seconds
+    folder-content-timeout: 600 #seconds
