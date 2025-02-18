@@ -93,7 +93,6 @@ public abstract class MinioOperations {
 
     }
 
-
     protected List<Item> findItemsWithPrefix(String prefix, boolean recursive) {
         Iterable<Result<Item>> objects = minioClient.listObjects(
                 ListObjectsArgs.builder()
