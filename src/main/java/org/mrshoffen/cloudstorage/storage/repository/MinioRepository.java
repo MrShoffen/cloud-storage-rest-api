@@ -15,7 +15,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
-//@Repository
 @RequiredArgsConstructor
 public class MinioRepository implements StorageObjectRepository {
 

@@ -33,7 +33,6 @@ public class UserStorageService {
 
     public String getPreviewLink(User user, String objectPath) {
         String fullPath = getFullPath(user, objectPath);
-
         return repository.objectDownloadLink(fullPath);
     }
 
@@ -47,16 +46,7 @@ public class UserStorageService {
     @SneakyThrows
     public List<StorageObjectResponse> listObjectsInFolder(User user, String folderPath) {
         String fullPathToFolder = getFullPath(user, folderPath);
-        long start = System.currentTimeMillis();
-        List<StorageObjectResponse> storageObjectResponses = repository.allObjectsInFolder(fullPathToFolder);
-        long end = System.currentTimeMillis();
-
-        System.out.println("-------");
-        System.out.println(end - start);
-        System.out.println("-------");
-
-
-        return storageObjectResponses;
+        return repository.allObjectsInFolder(fullPathToFolder);
     }
 
     public StorageObjectResourceDto downloadObject(User user, String objectPath) {
