@@ -27,6 +27,6 @@ docker compose up
 
 Если вас заинтересует запуск с фронтом, или вопросы по нему, что маловероятно) - напишите в ЛС
 
-гит - https://github.com/MrShoffen/weather-app-react-frontend
+гит - https://github.com/MrShoffen/cloud-storage-react-frontend
 
 
