@@ -26,7 +26,6 @@ public class LoggingStorageServiceAspect {
     public void afterReturningTwoArgsMethod(JoinPoint joinPoint, Object resource) {
         Object[] args = joinPoint.getArgs();
         User user = (User) args[0];
-        Long userId = user.getId();
         String requestPath = (String) args[1];
 
         String className = joinPoint.getTarget().getClass().getSimpleName();
@@ -42,7 +41,6 @@ public class LoggingStorageServiceAspect {
     public void afterFailTwoArgsMethod(JoinPoint joinPoint, Exception ex) {
         Object[] args = joinPoint.getArgs();
         User user = (User) args[0];
-        Long userId = user.getId();
         String requestPath = (String) args[1];
 
         String className = joinPoint.getTarget().getClass().getSimpleName();
@@ -62,7 +60,6 @@ public class LoggingStorageServiceAspect {
     public void afterReturningCopyDtoMethod(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
         User user = (User) args[0];
-        Long userId = user.getId();
         String source = (String) args[1];
         String target = (String) args[2];
 
@@ -79,7 +76,6 @@ public class LoggingStorageServiceAspect {
     public void afterFailCopyDtoMethod(JoinPoint joinPoint, Exception ex) {
         Object[] args = joinPoint.getArgs();
         User user = (User) args[0];
-        Long userId = user.getId();
         String source = (String) args[1];
         String target = (String) args[2];
 
@@ -101,7 +97,6 @@ public class LoggingStorageServiceAspect {
     public void afterReturningUploadMethod(JoinPoint joinPoint, Object response) {
         Object[] args = joinPoint.getArgs();
         User user = (User) args[0];
-        Long userId = user.getId();
         List<MultipartFile> files = (List<MultipartFile>) args[1];
         String targetFolder = (String) args[2];
 
@@ -121,7 +116,6 @@ public class LoggingStorageServiceAspect {
     public void afterFailUploadMethod(JoinPoint joinPoint, Exception ex) {
         Object[] args = joinPoint.getArgs();
         User user = (User) args[0];
-        Long userId = user.getId();
         List<MultipartFile> files = (List<MultipartFile>) args[1];
         String targetFolder = (String) args[2];
 
@@ -134,7 +128,6 @@ public class LoggingStorageServiceAspect {
                 files.stream().map(MultipartFile::getOriginalFilename).collect(Collectors.joining("\n   ")),
                 ex.toString()
         );
-
     }
 
 }
