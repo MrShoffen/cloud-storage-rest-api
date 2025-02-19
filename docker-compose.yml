@@ -17,7 +17,6 @@ services:
     volumes:
       - redis-data:/data
 
-
   minio:
     container_name: cloud_minio
     image: minio/minio:latest
