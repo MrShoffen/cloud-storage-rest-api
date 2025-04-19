@@ -23,6 +23,7 @@ jobs:
 
       - name: build image
         run: |
+          chmod +x gradlew
           ./gradlew jibDockerBuild
 
       - name: List files
